@@ -27,7 +27,7 @@ class WoojinTest: AppCompatActivity(){
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_woojintest)
+        setContentView(R.layout.activity_main)
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 

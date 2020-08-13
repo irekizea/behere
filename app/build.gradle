@@ -36,5 +36,4 @@ dependencies {
 
     //통합 위치 정보 제공자 사용을 위한 Google Play 서비스
     implementation 'com.google.android.gms:play-services-location:17.0.0'
-
 }
