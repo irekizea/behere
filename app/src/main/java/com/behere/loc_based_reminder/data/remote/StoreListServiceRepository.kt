@@ -25,13 +25,13 @@ class StoreListServiceRepository(
     }
 
     fun getToDoStoreListNearBy(
-        vararg queries: String,
         radius: Int,
         cx: Float,
         cy: Float,
         numOfRows: Int,
         success: (List<Item>) -> Unit,
-        fail: (String) -> Unit
+        fail: (String) -> Unit,
+        vararg queries: String
     ) {
         val list = ArrayList<Item>()
         getAllStoreListNearBy(radius, cx, cy, numOfRows, success = {
