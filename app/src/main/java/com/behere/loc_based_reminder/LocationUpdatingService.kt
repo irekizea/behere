@@ -202,6 +202,17 @@ class LocationUpdatingService : Service() {
 
 //                    lati.text = location.latitude.toString()
 //                    longi.text = location.longitude.toString()
+
+                    val application = application as CommonApplication
+                    val queries = ArrayList<String>()
+                    queries.add("다이소")
+                    val temp = queries.toTypedArray()
+                    application.apiContainer.storeListServiceRepository
+                        .getToDoStoreListNearBy( 500,location.longitude.toFloat(), location.latitude.toFloat(), 1000, success = {
+                            Log.d("우진", "Success Result $it")
+                        }, fail = {
+                            Log.d("우진", "Fail Result $it")
+                        }, queries = *temp)
                 }
             }
         }
