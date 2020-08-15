@@ -5,8 +5,10 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
@@ -22,7 +24,7 @@ class LocationUpdatingService : Service() {
 
     private var serviceIntent: Intent? = null
 
-    private val ANDROID_CHANNEL_ID = "my.kotlin.application.locationbasedtodoreminder"
+    private val ANDROID_CHANNEL_ID = "my.kotlin.application.test200812"
     private val NOTIFICATION_ID = 1
 
     private var notificationManager: NotificationManager? = null
@@ -32,6 +34,8 @@ class LocationUpdatingService : Service() {
 
     private lateinit var locationManager: LocationManager
     private lateinit var locationListener: android.location.LocationListener
+
+    var receiver: MyBroadcastReceiver? = null
 
     private val PERMISSIONS = arrayOf(
         Manifest.permission.ACCESS_COARSE_LOCATION
@@ -104,12 +108,15 @@ class LocationUpdatingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        Log.e("우진", "onStartCommand()")
+
         serviceIntent = intent
 
 //        requestLocationUpdateByLM()
 //        requestLocationUpdateByFLC()
 
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     override fun onDestroy() {
@@ -121,6 +128,8 @@ class LocationUpdatingService : Service() {
 
     fun requestLocationUpdateByLM() {
 
+        Log.e("우진", "현재 스레드: ${Thread.currentThread()}")
+
         val INTERVAL = 1000.toLong()
         val DISTANCE = 1.toFloat()
 
@@ -131,15 +140,15 @@ class LocationUpdatingService : Service() {
             }
 
             override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
-                TODO("Not yet implemented")
+                Log.e("우진", "1")
             }
 
             override fun onProviderEnabled(p0: String?) {
-                TODO("Not yet implemented")
+                Log.e("우진", "2")
             }
 
             override fun onProviderDisabled(p0: String?) {
-                TODO("Not yet implemented")
+                Log.e("우진", "3")
             }
         }
 
@@ -170,6 +179,8 @@ class LocationUpdatingService : Service() {
     }
 
     fun requestLocationUpdateByFLC() {
+
+        Log.e("우진", "현재 스레드 flc!!!!: ${Thread.currentThread()}")
 
         val locationRequest = LocationRequest.create()
         locationRequest.run {
