@@ -25,7 +25,7 @@ class StoreListServiceRepository(
     }
 
     fun getToDoStoreListNearBy(
-        query: String,
+        vararg queries: String,
         radius: Int,
         cx: Float,
         cy: Float,
@@ -36,8 +36,10 @@ class StoreListServiceRepository(
         val list = ArrayList<Item>()
         getAllStoreListNearBy(radius, cx, cy, numOfRows, success = {
             for (item in it) {
-                if (item.bizesNm.contains(query)) {
-                    list.add(item)
+                for (query in queries) {
+                    if (item.bizesNm.contains(query)) {
+                        list.add(item)
+                    }
                 }
             }
             success(list)
@@ -52,7 +54,7 @@ class StoreListServiceRepository(
         cy: Float,
         numOfRows: Int
     ) {
-       storeListServiceRemoteDataSource.getStoreListString(radius, cx, cy, numOfRows, 1)
+        storeListServiceRemoteDataSource.getStoreListString(radius, cx, cy, numOfRows, 1)
     }
 
 }
