@@ -3,6 +3,7 @@ package com.behere.loc_based_reminder
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
@@ -18,8 +19,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
-    private lateinit var locationListener: android.location.LocationListener
+
     private lateinit var locationManager: LocationManager
+    private lateinit var locationListener: android.location.LocationListener
 
     private val PERMISSIONS = arrayOf(
         Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -98,7 +100,12 @@ class MainActivity : AppCompatActivity() {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 //오레오 이상은 백그라운드로 실행하면 강제 종료 위험 있음 -> 포그라운드 실행해야
-                startForegroundService(Intent(applicationContext, LocationUpdatingService::class.java))
+                startForegroundService(
+                    Intent(
+                        applicationContext,
+                        LocationUpdatingService::class.java
+                    )
+                )
                 Log.e("우진", "API 레벨 26 이상")
             } else {
                 //백그라운드 실행에 제약 없음
