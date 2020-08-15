@@ -25,7 +25,8 @@ class MainActivity : AppCompatActivity() {
 
     private val PERMISSIONS = arrayOf(
         Manifest.permission.ACCESS_COARSE_LOCATION,
-        Manifest.permission.ACCESS_FINE_LOCATION
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION
     )
 
     private val REQUEST_CODE = 9999
@@ -57,8 +58,13 @@ class MainActivity : AppCompatActivity() {
                 "우진",
                 "위치 권한 없음"
             )
-
-            ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_CODE)
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_CODE)
+            }
         }
 
         locationCallback = object : LocationCallback() {

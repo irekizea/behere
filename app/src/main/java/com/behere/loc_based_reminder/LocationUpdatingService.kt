@@ -208,10 +208,10 @@ class LocationUpdatingService : Service() {
                     queries.add("다이소")
                     val temp = queries.toTypedArray()
                     application.apiContainer.storeListServiceRepository
-                        .getToDoStoreListNearBy( 500,location.longitude.toFloat(), location.latitude.toFloat(), 1000, success = {
-                            Log.d("우진", "Success Result $it")
+                        .getToDoStoreListNearBy( 500,location.longitude.toFloat(), location.latitude.toFloat(), 100, success = {
+                            Log.d("우진 다원", "Success Result $it")
                         }, fail = {
-                            Log.d("우진", "Fail Result $it")
+                            Log.d("우진 다원", "Fail Result $it")
                         }, queries = *temp)
                 }
             }
