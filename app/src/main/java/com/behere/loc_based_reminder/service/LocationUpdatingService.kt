@@ -1,14 +1,9 @@
-package com.behere.loc_based_reminder
+package com.behere.loc_based_reminder.service
 
 import android.Manifest
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
-import android.content.BroadcastReceiver
+import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
@@ -17,16 +12,22 @@ import android.os.*
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import com.behere.loc_based_reminder.CommonApplication
+import com.behere.loc_based_reminder.MapActivity
+import com.behere.loc_based_reminder.receiver.MyBroadcastReceiver
+import com.behere.loc_based_reminder.R
 import com.google.android.gms.location.*
-
 
 class LocationUpdatingService : Service() {
 
     private var serviceIntent: Intent? = null
 
     private val ANDROID_CHANNEL_ID = "my.kotlin.application.test200812"
-    private val NOTIFICATION_ID = 1
-
+    private val FIX_NOTIFICATION_ID = 1
+    private val EVENT_NOTIFICATION_ID = 9
+    
     private var notificationManager: NotificationManager? = null
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -34,6 +35,8 @@ class LocationUpdatingService : Service() {
 
     private lateinit var locationManager: LocationManager
     private lateinit var locationListener: android.location.LocationListener
+
+    private var eventBuilder: NotificationCompat.Builder? = null
 
     var receiver: MyBroadcastReceiver? = null
 
@@ -70,40 +73,44 @@ class LocationUpdatingService : Service() {
         val handlerForOtherThread = HandlerWithLooper(handlerThread.looper)
         handlerForOtherThread.post(Runnable {
             requestLocationUpdateByFLC()
-            requestLocationUpdateByLM()
+//            requestLocationUpdateByLM()
         })
 
         val handlerForMainThread = HandlerWithLooper(Looper.getMainLooper())
-        handlerForMainThread.post{
+        handlerForMainThread.post {
             Thread.sleep(5000)
             Toast.makeText(applicationContext, "접근 알림!", Toast.LENGTH_LONG).show()
         }
 
         //오레오 버전 이상은 포그라운드 서비스(+고정 알림 포함) 설정을 해주어야 함.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//
+//            //Notification(상단 알림) 채널 생성
+//            val channel = NotificationChannel(
+//                ANDROID_CHANNEL_ID,
+//                "LocationService",
+//                NotificationManager.IMPORTANCE_NONE
+//            )
+//
+//            channel.lightColor = Color.BLUE
+//            channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+//
+//            //Notification 객체를 가져옴
+//            notificationManager!!.createNotificationChannel(channel)
 
-            //Notification(상단 알림) 채널 생성
-            val channel = NotificationChannel(
-                ANDROID_CHANNEL_ID,
-                "LocationService",
-                NotificationManager.IMPORTANCE_NONE
-            )
+            setNotificationChannel()
+            setFixedNotification()
+            setEventNotification()
 
-            channel.lightColor = Color.BLUE
-            channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+//            //Notification 알림 객체 생성
+//            val builder = Notification.Builder(this, ANDROID_CHANNEL_ID)
+//                .setContentTitle(getString(R.string.app_name))
+//                .setContentText("SmartTracker")
 
-            //Notification 객체를 가져옴
-            notificationManager!!.createNotificationChannel(channel)
-
-            //Notification 알림 객체 생성
-            val builder = Notification.Builder(this, ANDROID_CHANNEL_ID)
-                .setContentTitle(getString(R.string.app_name))
-                .setContentText("SmartTracker")
-
-            val notification = builder.build()
-
-            //Notification 알림과 함께 포그라운드 서비스 시작
-            startForeground(NOTIFICATION_ID, notification)
+//            val notification = builder.build()
+//
+//            //Notification 알림과 함께 포그라운드 서비스 시작
+//            startForeground(FIX_NOTIFICATION_ID, notification)
         }
     }
 
@@ -135,8 +142,10 @@ class LocationUpdatingService : Service() {
 
         locationListener = object : android.location.LocationListener {
             override fun onLocationChanged(location: Location) {
-                Log.e("우진",
-                    "[업데이트된 위치 by LM] 위도: ${location.latitude} 경도: ${location.longitude}")
+                Log.e(
+                    "우진",
+                    "[업데이트된 위치 by LM] 위도: ${location.latitude} 경도: ${location.longitude}"
+                )
             }
 
             override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
@@ -198,21 +207,33 @@ class LocationUpdatingService : Service() {
                 for (location in locationResult.locations) {
                     Log.e(
                         "우진",
-                        "[업데이트된 위치 by FLC] 위도: ${location.latitude} 경도: ${location.longitude}")
-
-//                    lati.text = location.latitude.toString()
-//                    longi.text = location.longitude.toString()
+                        "[업데이트된 위치 by FLC] 위도: ${location.latitude} 경도: ${location.longitude}"
+                    )
 
                     val application = application as CommonApplication
                     val queries = ArrayList<String>()
                     queries.add("다이소")
                     val temp = queries.toTypedArray()
                     application.apiContainer.storeListServiceRepository
-                        .getToDoStoreListNearBy( 500,location.longitude.toFloat(), location.latitude.toFloat(), 100, success = {
-                            Log.d("우진 다원", "Success Result $it")
-                        }, fail = {
-                            Log.d("우진 다원", "Fail Result $it")
-                        }, queries = *temp)
+                        .getToDoStoreListNearBy(
+                            500,
+                            location.longitude.toFloat(),
+                            location.latitude.toFloat(),
+                            100,
+                            success = {
+                                Log.e("우진 다원", "Success Result $it")
+
+                                //알림 표시
+                                with(NotificationManagerCompat.from(applicationContext)){
+                                    notify(EVENT_NOTIFICATION_ID, eventBuilder!!.build())
+                                }
+
+                            },
+                            fail = {
+                                Log.e("우진 다원", "Fail Result $it")
+                            },
+                            queries = *temp
+                        )
                 }
             }
         }
@@ -246,5 +267,60 @@ class LocationUpdatingService : Service() {
                 1 -> Log.e("우진", "핸들러 메시지 수신 성공")
             }
         }
+    }
+
+    private fun setNotificationChannel(){
+        //알림 채널 생성
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+            val channel = NotificationChannel(
+                ANDROID_CHANNEL_ID,
+                "LocationService",
+                NotificationManager.IMPORTANCE_NONE
+            )
+
+            channel.lightColor = Color.BLUE
+            channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+
+            //Notification 객체를 가져옴
+            notificationManager!!.createNotificationChannel(channel)
+        }
+    }
+
+    private fun setEventNotification() {
+
+        //알림 클릭으로 앱 실행
+        val intent = Intent(this, MapActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+
+        val pendingIntent:PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+
+        //알림 콘텐츠 설정
+        eventBuilder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
+            .setSmallIcon(R.drawable.gps)
+            .setContentTitle("근접 알림")
+            .setContentText("할 일 설정 장소가 인접한 곳에 있습니다.")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+
+//        //알림 표시
+//        with(NotificationManagerCompat.from(this)){
+//            notify(FIX_NOTIFICATION_ID, eventBuilder.build())
+//        }
+    }
+
+    private fun setFixedNotification(){
+        //알림 객체 생성
+        val fixedBuilder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
+            .setContentTitle("리마인더")
+            .setContentText("위치 정보 사용 중입니다.")
+
+        val notification = fixedBuilder.build()
+
+        //알림과 함께 서비스 시작
+        startForeground(FIX_NOTIFICATION_ID, notification)
     }
 }

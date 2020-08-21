@@ -1,16 +1,11 @@
-package com.behere.loc_based_reminder
+package com.behere.loc_based_reminder.receiver
 
-import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationManager
 import android.os.Build
-import android.os.Bundle
 import android.util.Log
-import androidx.core.app.ActivityCompat
+import com.behere.loc_based_reminder.service.LocationUpdatingService
 
 class MyBroadcastReceiver : BroadcastReceiver() {
 

@@ -3,7 +3,6 @@ package com.behere.loc_based_reminder
 import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
@@ -12,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.behere.loc_based_reminder.service.LocationUpdatingService
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 
