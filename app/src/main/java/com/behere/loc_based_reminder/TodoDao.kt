@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
+import androidx.room.Delete
 
 @Dao
 interface TodoDao {
@@ -13,7 +14,8 @@ interface TodoDao {
     @Insert(onConflict = REPLACE)
     fun insert(todo: Todo)
 
-    @Query("DELETE FROM todo")
-    fun deleteAll()
+
+    @Delete
+    fun delete(todo : Todo)
 
 }

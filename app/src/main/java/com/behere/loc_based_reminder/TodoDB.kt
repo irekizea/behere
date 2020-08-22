@@ -18,7 +18,9 @@ abstract class TodoDB: RoomDatabase() {
                     INSTANCE = Room.databaseBuilder(context.applicationContext,
                         TodoDB::class.java, "todo.db")
                         .fallbackToDestructiveMigration()
+                        .allowMainThreadQueries()
                         .build()
+
                 }
             }
             return INSTANCE

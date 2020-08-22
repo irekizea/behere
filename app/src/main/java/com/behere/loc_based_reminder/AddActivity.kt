@@ -1,9 +1,8 @@
 package com.behere.loc_based_reminder
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_add.*
 
 class AddActivity : AppCompatActivity() {
@@ -23,7 +22,6 @@ class AddActivity : AppCompatActivity() {
             newTodo.doTodo = addTodo.text.toString()
             todoDb?.todoDao()?.insert(newTodo)
 
-
         }
 
         addBtn.setOnClickListener {
@@ -31,14 +29,15 @@ class AddActivity : AppCompatActivity() {
             addThread.start()
 
             val i = Intent(this, ListActivity::class.java)
+            i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(i)
-
-            finish()
-
         }
 
         ic_return.setOnClickListener{
-            finish()
+
+            val i = Intent(this, ListActivity::class.java)
+            i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(i)
         }
     }
 
