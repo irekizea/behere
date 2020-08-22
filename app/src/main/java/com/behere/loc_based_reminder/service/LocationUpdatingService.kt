@@ -24,7 +24,6 @@ import com.google.android.gms.location.*
 import org.json.JSONArray
 import org.json.JSONObject
 
-
 const val FIND_ACTION = "com.behere.loc_based_reminder.FIND_ACTION"
 const val FILE_NAME = "find.json"
 const val NOTI_GROUP = "com.behere.loc_based_reminder.NOTI_GROUP"
@@ -236,7 +235,8 @@ class LocationUpdatingService : Service() {
                                 var id = EVENT_NOTIFICATION_ID
                                 for (item in it) {
                                     with(NotificationManagerCompat.from(applicationContext)) {
-                                        notify(id, setEventNotification(item)!!.build())
+                                        notify(id, setEventNotification(item, id)!!.build())
+
                                     }
                                     id += 1
                                 }
@@ -318,7 +318,9 @@ class LocationUpdatingService : Service() {
         }
     }
 
-    private fun setEventNotification(item: Item) : NotificationCompat.Builder{
+
+    private fun setEventNotification(item: Item, id: Int) : NotificationCompat.Builder{
+
 
         //알림 클릭으로 앱 실행
         val intent = Intent(this, MapActivity::class.java).apply {
@@ -327,7 +329,8 @@ class LocationUpdatingService : Service() {
             putExtra("item", item)
         }
 
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         //알림 콘텐츠 설정
 
