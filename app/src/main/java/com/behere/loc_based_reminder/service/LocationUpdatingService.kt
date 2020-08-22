@@ -236,9 +236,11 @@ class LocationUpdatingService : Service() {
                                 for (item in it) {
                                     with(NotificationManagerCompat.from(applicationContext)) {
                                         notify(id, setEventNotification(item, id)!!.build())
+
                                     }
                                     id += 1
                                 }
+
 
                                 val summaryNotification = NotificationCompat.Builder(applicationContext, ANDROID_CHANNEL_ID)
                                     .setContentTitle("근접알림")
@@ -316,7 +318,9 @@ class LocationUpdatingService : Service() {
         }
     }
 
+
     private fun setEventNotification(item: Item, id: Int) : NotificationCompat.Builder{
+
 
         //알림 클릭으로 앱 실행
         val intent = Intent(this, MapActivity::class.java).apply {
@@ -324,6 +328,7 @@ class LocationUpdatingService : Service() {
             action = FIND_ACTION
             putExtra("item", item)
         }
+
 
         val pendingIntent: PendingIntent = PendingIntent.getActivity(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
@@ -343,6 +348,7 @@ class LocationUpdatingService : Service() {
             .setAutoCancel(true)
             .setGroup(NOTI_GROUP)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
+
     }
 
     private fun setFixedNotification() {

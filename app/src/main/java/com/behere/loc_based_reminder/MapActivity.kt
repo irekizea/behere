@@ -21,13 +21,14 @@ class MapActivity : AppCompatActivity() {
                 val item = intent.getParcelableExtra<Item>("item") ?: return
                 val i = Intent(
                     Intent.ACTION_VIEW,
+
                     Uri.parse("geo: ${item.lat}, ${item.lon}?q=${item.lnoAdr} ")
+
                 )
                 startActivity(i)
             }
         }
     }
-
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         intent?.action?.let {
@@ -41,4 +42,5 @@ class MapActivity : AppCompatActivity() {
             }
         }
     }
+
 }
