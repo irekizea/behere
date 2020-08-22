@@ -17,6 +17,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.behere.loc_based_reminder.CommonApplication
 import com.behere.loc_based_reminder.MapActivity
 import com.behere.loc_based_reminder.R
+import com.behere.loc_based_reminder.data.response.Item
 import com.behere.loc_based_reminder.receiver.MyBroadcastReceiver
 import com.behere.loc_based_reminder.util.writeFile
 import com.google.android.gms.location.*
@@ -25,13 +26,14 @@ import org.json.JSONObject
 
 const val FIND_ACTION = "com.behere.loc_based_reminder.FIND_ACTION"
 const val FILE_NAME = "find.json"
-
+const val NOTI_GROUP = "com.behere.loc_based_reminder.NOTI_GROUP"
 class LocationUpdatingService : Service() {
 
     private var serviceIntent: Intent? = null
 
     private val ANDROID_CHANNEL_ID = "my.kotlin.application.test200812"
     private val FIX_NOTIFICATION_ID = 1
+    private val EVENT_SUMMARY_ID = 9
     private val EVENT_NOTIFICATION_ID = 9
 
     private var notificationManager: NotificationManager? = null
@@ -42,7 +44,7 @@ class LocationUpdatingService : Service() {
     private lateinit var locationManager: LocationManager
     private lateinit var locationListener: android.location.LocationListener
 
-    private var eventBuilder: NotificationCompat.Builder? = null
+    //private var eventBuilder: NotificationCompat.Builder? = null
 
     var receiver: MyBroadcastReceiver? = null
 
@@ -107,8 +109,6 @@ class LocationUpdatingService : Service() {
 
             setNotificationChannel()
             setFixedNotification()
-            setEventNotification()
-
 //            //Notification 알림 객체 생성
 //            val builder = Notification.Builder(this, ANDROID_CHANNEL_ID)
 //                .setContentTitle(getString(R.string.app_name))
@@ -220,6 +220,8 @@ class LocationUpdatingService : Service() {
                     val application = application as CommonApplication
                     val queries = ArrayList<String>()
                     queries.add("다이소")
+                    queries.add("GS25")
+                    queries.add("편의점")
                     val temp = queries.toTypedArray()
                     application.apiContainer.storeListServiceRepository
                         .getToDoStoreListNearBy(
@@ -230,6 +232,7 @@ class LocationUpdatingService : Service() {
                             success = {
                                 Log.e("우진 다원", "Success Result $it")
                                 val arr = JSONArray()
+                                var id = EVENT_NOTIFICATION_ID
                                 for (item in it) {
                                     val obj = JSONObject()
                                     obj.put("adongCd", item.adongCd)
@@ -272,13 +275,30 @@ class LocationUpdatingService : Service() {
                                     obj.put("signguCd", item.signguCd)
                                     obj.put("signguNm", item.signguNm)
                                     arr.put(obj)
+                                    with(NotificationManagerCompat.from(applicationContext)) {
+                                        notify(id, setEventNotification(item)!!.build())
+                                    }
+                                    id += 1
+                                }
+
+
+                                val summaryNotification = NotificationCompat.Builder(applicationContext, ANDROID_CHANNEL_ID)
+                                    .setContentTitle("근접알림")
+                                    //set content text to support devices running API level < 24
+                                    .setContentText("${it.size}개의 알림이 있습니다.")
+                                    .setSmallIcon(R.drawable.gps)
+                                    //build summary info into InboxStyle template
+                                    //specify which group this notification belongs to
+                                    .setGroup(NOTI_GROUP)
+                                    //set this notification as the summary for the group
+                                    .setGroupSummary(true)
+                                    .build()
+
+                                with(NotificationManagerCompat.from(applicationContext)) {
+                                    notify(EVENT_SUMMARY_ID, summaryNotification)
                                 }
                                 writeFile(FILE_NAME, applicationContext, arr.toString())
                                 //알림 표시
-                                with(NotificationManagerCompat.from(applicationContext)) {
-                                    notify(EVENT_NOTIFICATION_ID, eventBuilder!!.build())
-                                }
-
                             },
                             fail = {
                                 Log.e("우진 다원", "Fail Result $it")
@@ -338,7 +358,7 @@ class LocationUpdatingService : Service() {
         }
     }
 
-    private fun setEventNotification() {
+    private fun setEventNotification(item: Item) : NotificationCompat.Builder{
 
         //알림 클릭으로 앱 실행
         val intent = Intent(this, MapActivity::class.java).apply {
@@ -349,20 +369,22 @@ class LocationUpdatingService : Service() {
         val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
 
         //알림 콘텐츠 설정
-        eventBuilder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
+        val eventBuilder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
             .setSmallIcon(R.drawable.gps)
-            .setContentTitle("근접 알림")
-            .setContentText("할 일 설정 장소가 인접한 곳에 있습니다.")
+            .setContentTitle("근접 알림 ${item.bizesNm}")
+            .setContentText("할 일 설정 장소 ${item.bizesNm}가 인접한 곳에 있습니다.")
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
+            .setGroup(NOTI_GROUP)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
 
 //        //알림 표시
 //        with(NotificationManagerCompat.from(this)){
 //            notify(FIX_NOTIFICATION_ID, eventBuilder.build())
 //        }
+        return eventBuilder
     }
 
     private fun setFixedNotification() {
