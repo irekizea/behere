@@ -353,6 +353,7 @@ class LocationUpdatingService : Service() {
             .setSmallIcon(R.drawable.gps)
             .setContentTitle("근접 알림")
             .setContentText("할 일 설정 장소가 인접한 곳에 있습니다.")
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
