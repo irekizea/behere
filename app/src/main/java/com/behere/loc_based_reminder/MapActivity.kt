@@ -1,5 +1,6 @@
 package com.behere.loc_based_reminder
 
+import android.app.PendingIntent
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -17,60 +18,26 @@ class MapActivity : AppCompatActivity() {
         setContentView(R.layout.activity_map)
         intent.action?.let {
             if (it == FIND_ACTION) {
-                val file = File(applicationContext.filesDir, FILE_NAME)
-                if (file.exists()) {
-                    val arr = JSONArray(readFile(file))
-                    if (arr.length() < 1) {
-                        return
-                    }
-                    val obj = arr.getJSONObject(0)
-                    val item = Item(obj.getString("adongCd"),
-                        obj.getString("adongNm"),
-                        obj.getString("bizesId"),
-                        obj.getString("bizesNm"),
-                        obj.getString("bldMngNo"),
-                        obj.getString("bldMnno"),
-                        obj.getString("bldNm"),
-                        obj.getString("bldSlno"),
-                        obj.getString("brchNm"),
-                        obj.getString("ctprvnCd"),
-                        obj.getString("ctprvnNm"),
-                        obj.getString("dongNo"),
-                        obj.getString("flrNo"),
-                        obj.getString("hoNo"),
-                        obj.getString("indsLclsCd"),
-                        obj.getString("indsLclsNm"),
-                        obj.getString("indsMclsCd"),
-                        obj.getString("indsMclsNm"),
-                        obj.getString("indsSclsCd"),
-                        obj.getString("indsSclsNm"),
-                        obj.getString("ksicCd"),
-                        obj.getString("ksicNm"),
-                        obj.getString("lat"),
-                        obj.getString("ldongCd"),
-                        obj.getString("ldongNm"),
-                        obj.getString("lnoAdr"),
-                        obj.getString("lnoCd"),
-                        obj.getString("lnoMnno"),
-                        obj.getString("lnoSlno"),
-                        obj.getString("lon"),
-                        obj.getString("newZipcd"),
-                        obj.getString("oldZipcd"),
-                        obj.getString("plotSctCd"),
-                        obj.getString("plotSctNm"),
-                        obj.getString("rdnm"),
-                        obj.getString("rdnmAdr"),
-                        obj.getString("rdnmCd"),
-                        obj.getString("signguCd"),
-                        obj.getString("signguNm")
-                        )
+                val item = intent.getParcelableExtra<Item>("item") ?: return
+                val i = Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("geo: ${item.lat}, ${item.lon}?q=${item.lnoAdr}")
+                )
+                startActivity(i)
+            }
+        }
+    }
 
-                    val i = Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse("geo: ${item.lat}, ${item.lon}?q=${item.lnoAdr}")
-                    )
-                    startActivity(i)
-                }
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        intent?.action?.let {
+            if (it == FIND_ACTION) {
+                val item = intent.getParcelableExtra<Item>("item") ?: return
+                val i = Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("geo: ${item.lat}, ${item.lon}?q=${item.lnoAdr}")
+                )
+                startActivity(i)
             }
         }
     }

@@ -234,53 +234,11 @@ class LocationUpdatingService : Service() {
                                 val arr = JSONArray()
                                 var id = EVENT_NOTIFICATION_ID
                                 for (item in it) {
-                                    val obj = JSONObject()
-                                    obj.put("adongCd", item.adongCd)
-                                    obj.put("adongNm", item.adongNm)
-                                    obj.put("bizesId", item.bizesId)
-                                    obj.put("bizesNm", item.bizesNm)
-                                    obj.put("bldMngNo", item.bldMngNo)
-                                    obj.put("bldMnno", item.bldMnno)
-                                    obj.put("bldNm", item.bldNm)
-                                    obj.put("bldSlno", item.bldSlno)
-                                    obj.put("brchNm", item.brchNm)
-                                    obj.put("ctprvnCd", item.ctprvnCd)
-                                    obj.put("ctprvnNm", item.ctprvnNm)
-                                    obj.put("dongNo", item.dongNo)
-                                    obj.put("flrNo", item.flrNo)
-                                    obj.put("hoNo", item.hoNo)
-                                    obj.put("indsLclsCd", item.indsLclsCd)
-                                    obj.put("indsLclsNm", item.indsLclsNm)
-                                    obj.put("indsMclsCd", item.indsMclsCd)
-                                    obj.put("indsMclsNm", item.indsMclsNm)
-                                    obj.put("indsSclsCd", item.indsSclsCd)
-                                    obj.put("indsSclsNm", item.indsSclsNm)
-                                    obj.put("ksicCd", item.ksicCd)
-                                    obj.put("ksicNm", item.ksicNm)
-                                    obj.put("lat", item.lat)
-                                    obj.put("ldongCd", item.ldongCd)
-                                    obj.put("ldongNm", item.ldongNm)
-                                    obj.put("lnoAdr", item.lnoAdr)
-                                    obj.put("lnoCd", item.lnoCd)
-                                    obj.put("lnoMnno", item.lnoMnno)
-                                    obj.put("lnoSlno", item.lnoSlno)
-                                    obj.put("lon", item.lon)
-                                    obj.put("newZipcd", item.newZipcd)
-                                    obj.put("oldZipcd", item.oldZipcd)
-                                    obj.put("plotSctCd", item.plotSctCd)
-                                    obj.put("plotSctNm", item.plotSctNm)
-                                    obj.put("rdnm", item.rdnm)
-                                    obj.put("rdnmAdr", item.rdnmAdr)
-                                    obj.put("rdnmCd", item.rdnmCd)
-                                    obj.put("signguCd", item.signguCd)
-                                    obj.put("signguNm", item.signguNm)
-                                    arr.put(obj)
                                     with(NotificationManagerCompat.from(applicationContext)) {
                                         notify(id, setEventNotification(item)!!.build())
                                     }
                                     id += 1
                                 }
-
 
                                 val summaryNotification = NotificationCompat.Builder(applicationContext, ANDROID_CHANNEL_ID)
                                     .setContentTitle("근접알림")
@@ -362,14 +320,20 @@ class LocationUpdatingService : Service() {
 
         //알림 클릭으로 앱 실행
         val intent = Intent(this, MapActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             action = FIND_ACTION
+            putExtra("item", item)
         }
 
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         //알림 콘텐츠 설정
-        val eventBuilder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
+
+//        //알림 표시
+//        with(NotificationManagerCompat.from(this)){
+//            notify(FIX_NOTIFICATION_ID, eventBuilder.build())
+//        }
+        return NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
             .setSmallIcon(R.drawable.gps)
             .setContentTitle("근접 알림 ${item.bizesNm}")
             .setContentText("할 일 설정 장소 ${item.bizesNm}가 인접한 곳에 있습니다.")
@@ -379,12 +343,6 @@ class LocationUpdatingService : Service() {
             .setAutoCancel(true)
             .setGroup(NOTI_GROUP)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-
-//        //알림 표시
-//        with(NotificationManagerCompat.from(this)){
-//            notify(FIX_NOTIFICATION_ID, eventBuilder.build())
-//        }
-        return eventBuilder
     }
 
     private fun setFixedNotification() {
