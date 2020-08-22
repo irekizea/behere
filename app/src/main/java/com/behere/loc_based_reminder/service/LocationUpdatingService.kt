@@ -24,6 +24,7 @@ import com.google.android.gms.location.*
 import org.json.JSONArray
 import org.json.JSONObject
 
+
 const val FIND_ACTION = "com.behere.loc_based_reminder.FIND_ACTION"
 const val FILE_NAME = "find.json"
 const val NOTI_GROUP = "com.behere.loc_based_reminder.NOTI_GROUP"
@@ -232,7 +233,6 @@ class LocationUpdatingService : Service() {
                             success = {
                                 Log.e("우진 다원", "Success Result $it")
                                 val arr = JSONArray()
-                                var id = EVENT_NOTIFICATION_ID
                                 for (item in it) {
                                     val obj = JSONObject()
                                     obj.put("adongCd", item.adongCd)
@@ -275,10 +275,6 @@ class LocationUpdatingService : Service() {
                                     obj.put("signguCd", item.signguCd)
                                     obj.put("signguNm", item.signguNm)
                                     arr.put(obj)
-                                    with(NotificationManagerCompat.from(applicationContext)) {
-                                        notify(id, setEventNotification(item)!!.build())
-                                    }
-                                    id += 1
                                 }
 
 
@@ -371,8 +367,8 @@ class LocationUpdatingService : Service() {
         //알림 콘텐츠 설정
         val eventBuilder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
             .setSmallIcon(R.drawable.gps)
-            .setContentTitle("근접 알림 ${item.bizesNm}")
-            .setContentText("할 일 설정 장소 ${item.bizesNm}가 인접한 곳에 있습니다.")
+            .setContentTitle("근접 알림")
+            .setContentText("할 일 설정 장소가 인접한 곳에 있습니다.")
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
