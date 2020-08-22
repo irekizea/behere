@@ -37,6 +37,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-    </application>
 
+        <meta-data android:name="com.kakao.sdk.AppKey" android:value="91b39e9915563e0c71ac6643bb39b5c8"/>
+    </application>
 </manifest>
