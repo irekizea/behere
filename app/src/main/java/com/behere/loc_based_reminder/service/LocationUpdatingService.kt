@@ -16,9 +16,15 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.behere.loc_based_reminder.CommonApplication
 import com.behere.loc_based_reminder.MapActivity
-import com.behere.loc_based_reminder.receiver.MyBroadcastReceiver
 import com.behere.loc_based_reminder.R
+import com.behere.loc_based_reminder.receiver.MyBroadcastReceiver
+import com.behere.loc_based_reminder.util.writeFile
 import com.google.android.gms.location.*
+import org.json.JSONArray
+import org.json.JSONObject
+
+const val FIND_ACTION = "com.behere.loc_based_reminder.FIND_ACTION"
+const val FILE_NAME = "find.json"
 
 class LocationUpdatingService : Service() {
 
@@ -27,7 +33,7 @@ class LocationUpdatingService : Service() {
     private val ANDROID_CHANNEL_ID = "my.kotlin.application.test200812"
     private val FIX_NOTIFICATION_ID = 1
     private val EVENT_NOTIFICATION_ID = 9
-    
+
     private var notificationManager: NotificationManager? = null
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -39,6 +45,7 @@ class LocationUpdatingService : Service() {
     private var eventBuilder: NotificationCompat.Builder? = null
 
     var receiver: MyBroadcastReceiver? = null
+
 
     private val PERMISSIONS = arrayOf(
         Manifest.permission.ACCESS_COARSE_LOCATION
@@ -222,9 +229,53 @@ class LocationUpdatingService : Service() {
                             100,
                             success = {
                                 Log.e("우진 다원", "Success Result $it")
-
+                                val arr = JSONArray()
+                                for (item in it) {
+                                    val obj = JSONObject()
+                                    obj.put("adongCd", item.adongCd)
+                                    obj.put("adongNm", item.adongNm)
+                                    obj.put("bizesId", item.bizesId)
+                                    obj.put("bizesNm", item.bizesNm)
+                                    obj.put("bldMngNo", item.bldMngNo)
+                                    obj.put("bldMnno", item.bldMnno)
+                                    obj.put("bldNm", item.bldNm)
+                                    obj.put("bldSlno", item.bldSlno)
+                                    obj.put("brchNm", item.brchNm)
+                                    obj.put("ctprvnCd", item.ctprvnCd)
+                                    obj.put("ctprvnNm", item.ctprvnNm)
+                                    obj.put("dongNo", item.dongNo)
+                                    obj.put("flrNo", item.flrNo)
+                                    obj.put("hoNo", item.hoNo)
+                                    obj.put("indsLclsCd", item.indsLclsCd)
+                                    obj.put("indsLclsNm", item.indsLclsNm)
+                                    obj.put("indsMclsCd", item.indsMclsCd)
+                                    obj.put("indsMclsNm", item.indsMclsNm)
+                                    obj.put("indsSclsCd", item.indsSclsCd)
+                                    obj.put("indsSclsNm", item.indsSclsNm)
+                                    obj.put("ksicCd", item.ksicCd)
+                                    obj.put("ksicNm", item.ksicNm)
+                                    obj.put("lat", item.lat)
+                                    obj.put("ldongCd", item.ldongCd)
+                                    obj.put("ldongNm", item.ldongNm)
+                                    obj.put("lnoAdr", item.lnoAdr)
+                                    obj.put("lnoCd", item.lnoCd)
+                                    obj.put("lnoMnno", item.lnoMnno)
+                                    obj.put("lnoSlno", item.lnoSlno)
+                                    obj.put("lon", item.lon)
+                                    obj.put("newZipcd", item.newZipcd)
+                                    obj.put("oldZipcd", item.oldZipcd)
+                                    obj.put("plotSctCd", item.plotSctCd)
+                                    obj.put("plotSctNm", item.plotSctNm)
+                                    obj.put("rdnm", item.rdnm)
+                                    obj.put("rdnmAdr", item.rdnmAdr)
+                                    obj.put("rdnmCd", item.rdnmCd)
+                                    obj.put("signguCd", item.signguCd)
+                                    obj.put("signguNm", item.signguNm)
+                                    arr.put(obj)
+                                }
+                                writeFile(FILE_NAME, applicationContext, arr.toString())
                                 //알림 표시
-                                with(NotificationManagerCompat.from(applicationContext)){
+                                with(NotificationManagerCompat.from(applicationContext)) {
                                     notify(EVENT_NOTIFICATION_ID, eventBuilder!!.build())
                                 }
 
@@ -269,7 +320,7 @@ class LocationUpdatingService : Service() {
         }
     }
 
-    private fun setNotificationChannel(){
+    private fun setNotificationChannel() {
         //알림 채널 생성
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
@@ -292,9 +343,10 @@ class LocationUpdatingService : Service() {
         //알림 클릭으로 앱 실행
         val intent = Intent(this, MapActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            action = FIND_ACTION
         }
 
-        val pendingIntent:PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
 
         //알림 콘텐츠 설정
         eventBuilder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
@@ -312,7 +364,7 @@ class LocationUpdatingService : Service() {
 //        }
     }
 
-    private fun setFixedNotification(){
+    private fun setFixedNotification() {
         //알림 객체 생성
         val fixedBuilder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
             .setContentTitle("리마인더")
