@@ -3,17 +3,26 @@ package com.behere.loc_based_reminder
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.behere.loc_based_reminder.service.FILE_NAME
+import com.behere.loc_based_reminder.service.FIND_ACTION
 import com.behere.loc_based_reminder.service.LocationUpdatingService
+import com.behere.loc_based_reminder.util.readFile
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
+import org.json.JSONArray
+import java.io.File
+import java.lang.Exception
+import java.security.MessageDigest
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,9 +43,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+
+        try {
+            val info : PackageInfo = packageManager.getPackageInfo("com.behere.loc_based_reminder", PackageManager.GET_SIGNATURES)
+            for (signature in info.signatures) {
+                val md = MessageDigest.getInstance("SHA")
+                md.update(signature.toByteArray())
+                Log.d("KeyHash : " , Base64.encodeToString(md.digest(), Base64.DEFAULT))
+            }
+        } catch (e : Exception) {
+            e.printStackTrace()
+        }
 
         if (ActivityCompat.checkSelfPermission(
                 this,
