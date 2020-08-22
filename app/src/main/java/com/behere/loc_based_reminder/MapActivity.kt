@@ -21,7 +21,7 @@ class MapActivity : AppCompatActivity() {
                 val item = intent.getParcelableExtra<Item>("item") ?: return
                 val i = Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse("geo: ${item.lat}, ${item.lon}?q=${item.lnoAdr}")
+                    Uri.parse("geo: ${item.lat}, ${item.lon}?q=${item.lnoAdr} ")
                 )
                 startActivity(i)
             }
