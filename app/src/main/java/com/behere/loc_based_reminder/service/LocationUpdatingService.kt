@@ -24,6 +24,7 @@ import com.google.android.gms.location.*
 import org.json.JSONArray
 import org.json.JSONObject
 
+
 const val FIND_ACTION = "com.behere.loc_based_reminder.FIND_ACTION"
 const val FILE_NAME = "find.json"
 const val NOTI_GROUP = "com.behere.loc_based_reminder.NOTI_GROUP"
@@ -240,6 +241,7 @@ class LocationUpdatingService : Service() {
                                     id += 1
                                 }
 
+
                                 val summaryNotification = NotificationCompat.Builder(applicationContext, ANDROID_CHANNEL_ID)
                                     .setContentTitle("근접알림")
                                     //set content text to support devices running API level < 24
@@ -343,6 +345,7 @@ class LocationUpdatingService : Service() {
             .setAutoCancel(true)
             .setGroup(NOTI_GROUP)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
+
     }
 
     private fun setFixedNotification() {

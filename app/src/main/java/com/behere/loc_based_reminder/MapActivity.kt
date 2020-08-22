@@ -1,5 +1,6 @@
 package com.behere.loc_based_reminder
 
+
 import android.app.PendingIntent
 import android.content.Intent
 import android.net.Uri
@@ -24,6 +25,7 @@ class MapActivity : AppCompatActivity() {
                     Uri.parse("geo: ${item.lat}, ${item.lon}?q=${item.lnoAdr}")
                 )
                 startActivity(i)
+
             }
         }
     }
