@@ -8,9 +8,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.location.Location
 import android.location.LocationManager
 import android.os.*
@@ -173,6 +170,8 @@ class LocationUpdatingService : Service() {
                         "[업데이트된 위치 by FLC] 위도: ${location.latitude} 경도: ${location.longitude}"
                     )
 
+                    var storeList = mutableListOf<String>()
+
                     val application = application as CommonApplication
                     val queries = ArrayList<String>()
                     queries.add("다이소")
@@ -189,11 +188,34 @@ class LocationUpdatingService : Service() {
                                 Log.e("우진 다원", "Success Result $it")
                                 val arr = JSONArray()
                                 var id = EVENT_NOTIFICATION_ID
+//                                for (item in it) {
+//                                    with(NotificationManagerCompat.from(applicationContext)) {
+//                                        notify(id, setEventNotification(item, id)!!.build())
+//                                    }
+//                                    id += 1
+//                                }
+
+                                //TODO:점포 이름 다르게 들어오는 거 확인.
                                 for (item in it) {
-                                    with(NotificationManagerCompat.from(applicationContext)) {
-                                        notify(id, setEventNotification(item, id)!!.build())
+                                    Log.e("우진","${storeList.toString()}")
+                                    if(id == EVENT_NOTIFICATION_ID){
+                                        storeList.add(item.bizesNm)
+                                        with(NotificationManagerCompat.from(applicationContext))
+                                        {
+                                            notify(id, setEventNotification(item, id)!!.build())
+                                        }
+                                        id++
                                     }
-                                    id += 1
+                                    else{
+                                        if (!storeList!!.contains(item.bizesNm)) {
+                                            storeList.add(item.bizesNm)
+                                            with(NotificationManagerCompat.from(applicationContext))
+                                            {
+                                                notify(id, setEventNotification(item, id)!!.build())
+                                            }
+                                            id++
+                                        }
+                                    }
                                 }
 
                                 val summaryNotification = NotificationCompat.Builder(applicationContext, ANDROID_CHANNEL_ID)
@@ -211,6 +233,7 @@ class LocationUpdatingService : Service() {
                                 with(NotificationManagerCompat.from(applicationContext)) {
                                     notify(EVENT_SUMMARY_ID, summaryNotification)
                                 }
+
                                 writeFile(FILE_NAME, applicationContext, arr.toString())
                                 //알림 표시
                             },
