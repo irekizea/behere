@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.behere.loc_based_reminder.CommonApplication
 import com.behere.loc_based_reminder.ListActivity
+import com.behere.loc_based_reminder.MapActivity
 import com.behere.loc_based_reminder.R
 import com.behere.loc_based_reminder.data.response.Item
 import com.behere.loc_based_reminder.receiver.MyBroadcastReceiver
@@ -173,13 +174,12 @@ class LocationUpdatingService : Service() {
                     var storeList = mutableListOf<String>()
 
                     val application = application as CommonApplication
-                    val queries = ArrayList<String>()
-                    queries.add("다이소")
-                    queries.add("GS25")
-                    queries.add("편의점")
+                    val queries = application.apiContainer.storeListServiceRepository?.getPlace()
+
+                    if (queries.isNullOrEmpty()) return
                     val temp = queries.toTypedArray()
                     application.apiContainer.storeListServiceRepository
-                        .getToDoStoreListNearBy(
+                        ?.getToDoStoreListNearBy(
                             500,
                             location.longitude.toFloat(),
                             location.latitude.toFloat(),
@@ -299,7 +299,7 @@ class LocationUpdatingService : Service() {
 
     private fun setEventNotification(item: Item, id: Int) : NotificationCompat.Builder{
         //알림 클릭 시, 앱 진입
-        val intent = Intent(this, MapActivity::class.java).apply {
+        val intent = Intent(this, ListActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             action = FIND_ACTION
             putExtra("item", item)
