@@ -2,6 +2,7 @@ package com.behere.loc_based_reminder
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_add.*
 
@@ -20,8 +21,9 @@ class AddActivity : AppCompatActivity() {
             val newTodo = Todo()
             newTodo.doPlace = addPlace.text.toString()
             newTodo.doTodo = addTodo.text.toString()
+            newTodo.doAlert = alertSwitch.isChecked
             todoDb?.todoDao()?.insert(newTodo)
-
+            Log.e("주창",newTodo.doAlert.toString())
         }
 
         addBtn.setOnClickListener {
