@@ -51,21 +51,6 @@ class ListActivity : AppCompatActivity() {
     }
 
 
-
-    override fun onStart() {
-        super.onStart()
-        for(temp in todoList){
-            Log.e("우진 start", temp.doTodo)
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        for(temp in todoList){
-            Log.e("우진 resume", temp.doTodo)
-        }
-    }
-
     override fun onDestroy() {
         TodoDB.destroyInstance()
         todoDb = null
@@ -86,15 +71,10 @@ class ListActivity : AppCompatActivity() {
                 direction: Int
             ) {
 
-
-
                     val position = viewHolder.adapterPosition
                     val todo = todoList.removeAt(position)
                     mAdapter.notifyItemRemoved(position)
                         todoDb?.todoDao()?.delete(todo)
-
-
-
 
             }
 
