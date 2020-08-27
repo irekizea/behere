@@ -1,6 +1,7 @@
 package com.behere.loc_based_reminder
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -9,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.behere.loc_based_reminder.data.response.Item
+import com.behere.loc_based_reminder.service.FIND_ACTION
 import kotlinx.android.synthetic.main.activity_list.*
 
 
@@ -20,6 +23,18 @@ class ListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_list)
+
+        intent?.action?.let {
+            if (it == FIND_ACTION) {
+                val item = intent.getParcelableExtra<Item>("item") ?: return
+                val i = Intent(
+                    Intent.ACTION_VIEW,
+                    //geo:0,0?q=34.99,-106.61(Treasure)"
+                    Uri.parse("geo:0,0?q=${item.lat}, ${item.lon}(${item.bizesNm})")
+                )
+                startActivity(i)
+            }
+        }
 
         todoDb = TodoDB.getInstance(this)
         mAdapter = TodoAdapter(this, todoList)
@@ -99,5 +114,20 @@ class ListActivity : AppCompatActivity() {
             }
 
         }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        intent?.action?.let {
+            if (it == FIND_ACTION) {
+                val item = intent.getParcelableExtra<Item>("item") ?: return
+                val i = Intent(
+                    Intent.ACTION_VIEW,
+                    //geo:0,0?q=34.99,-106.61(Treasure)"
+                    Uri.parse("geo:0,0?q=${item.lat}, ${item.lon}(${item.bizesNm})")
+                )
+                startActivity(i)
+            }
+        }
+    }
 
 }
