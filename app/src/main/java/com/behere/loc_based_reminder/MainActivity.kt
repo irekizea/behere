@@ -1,286 +1,182 @@
 package com.behere.loc_based_reminder
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationManager
+import android.database.DataSetObserver
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
+import androidx.annotation.NonNull
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.behere.loc_based_reminder.service.FILE_NAME
-import com.behere.loc_based_reminder.service.FIND_ACTION
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.behere.loc_based_reminder.service.LocationUpdatingService
-import com.behere.loc_based_reminder.util.readFile
-import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
-import org.json.JSONArray
-import java.io.File
-import java.lang.Exception
 import java.security.MessageDigest
+
+const val TAG = "TODO"
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
+    private var todoDb: TodoDB? = null
+    private var todoList = mutableListOf<Todo>()
+    lateinit var mAdapter: TodoAdapter
 
-    private lateinit var locationManager: LocationManager
-    private lateinit var locationListener: android.location.LocationListener
-
-    private val PERMISSIONS = arrayOf(
-        Manifest.permission.ACCESS_COARSE_LOCATION,
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.ACCESS_BACKGROUND_LOCATION
-    )
-
-    private val REQUEST_CODE = 9999
+    private val LOCATION_REQUEST_CODE = 999
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
 
         try {
-            val info : PackageInfo = packageManager.getPackageInfo("com.behere.loc_based_reminder", PackageManager.GET_SIGNATURES)
+            val info: PackageInfo = packageManager.getPackageInfo(
+                "com.behere.loc_based_reminder",
+                PackageManager.GET_SIGNATURES
+            )
             for (signature in info.signatures) {
                 val md = MessageDigest.getInstance("SHA")
                 md.update(signature.toByteArray())
-                Log.d("KeyHash : " , Base64.encodeToString(md.digest(), Base64.DEFAULT))
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+                    Log.d("KeyHash : ", Base64.encodeToString(md.digest(), Base64.DEFAULT))
+                }
             }
-        } catch (e : Exception) {
+        } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
 
-        if (ActivityCompat.checkSelfPermission(
+        //Permission check for user location access
+        val isLocationPermissionApproved = ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED
+        if (isLocationPermissionApproved) {
+            val isBackgroundLocationPermissionApproved = ActivityCompat.checkSelfPermission(
                 this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-
-            Log.e(
-                "우진",
-                "위치 권한 없음"
-            )
-            if (ActivityCompat.checkSelfPermission(
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            if (isBackgroundLocationPermissionApproved) {
+                //All permissions are granted
+            } else {
+                //User not allowed background location permission
+                ActivityCompat.requestPermissions(
                     this,
+                    arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                    LOCATION_REQUEST_CODE
+                )
+            }
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_CODE)
-            }
+                ),
+                LOCATION_REQUEST_CODE
+            )
         }
 
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult?) {
-                super.onLocationResult(locationResult)
-                locationResult ?: return
-
-                for (location in locationResult.locations) {
-                    Log.e(
-                        "우진",
-                        "[업데이트된 위치 by FLC] 위도: ${location.latitude} 경도: ${location.longitude}"
-                    )
-                }
-            }
-        }
-
-        locationListener = object : android.location.LocationListener {
-            override fun onLocationChanged(location: Location) {
-                Log.e("우진", "[업데이트된 위치 by LM] 위도: ${location.latitude} 경도: ${location.longitude}")
-            }
-
-            override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
-                TODO("Not yet implemented")
-            }
-
-            override fun onProviderEnabled(p0: String?) {
-                TODO("Not yet implemented")
-            }
-
-            override fun onProviderDisabled(p0: String?) {
-                TODO("Not yet implemented")
-            }
-        }
+        todoDb = TodoDB.getInstance(this)
+        mAdapter = TodoAdapter(this, todoList)
+        val itemTouchHelper = ItemTouchHelper(simpleItemTouchCallback)
+        itemTouchHelper.attachToRecyclerView(recycler_view)
 
         val intent = Intent(this, LocationUpdatingService::class.java)
+        val r = Runnable {
+            try {
+                todoList = (todoDb?.todoDao()?.getAll() as MutableList<Todo>?)!!
+                mAdapter = TodoAdapter(this, todoList)
+                mAdapter.notifyDataSetChanged()
 
-        //서비스 시작, 중지 트리거
-        start.setOnClickListener {
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                //오레오 이상은 백그라운드로 실행하면 강제 종료 위험 있음 -> 포그라운드 실행해야
-                startForegroundService(
-                    Intent(
-                        applicationContext,
-                        LocationUpdatingService::class.java
-                    )
-                )
-                Log.e("우진", "API 레벨 26 이상")
-            } else {
-                //백그라운드 실행에 제약 없음
-                startService(Intent(applicationContext, LocationUpdatingService::class.java))
-                Log.e("우진", "API 레벨 25 이하")
+                recycler_view.adapter = mAdapter
+                recycler_view.layoutManager = LinearLayoutManager(this)
+                recycler_view.setHasFixedSize(true)
+            } catch (e: Exception) {
+                Log.d(TAG, "Error - $e")
             }
 
-            Log.e("우진", "서비스 시작")
-        }
+            if(LocationUpdatingService().serviceIntent != null){
+                if(todoList.size == 0){
+                    stopService(intent)
+                    Log.e(TAG, "Stop Service because No schedule")
+                }
+            }
+            else{
+                // At least one schedule
+                if(todoList.size>0){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        //오레오 이상은 백그라운드로 실행하면 강제 종료 위험 있음 -> 포그라운드 실행해야
+                        startForegroundService(
+                            Intent(
+                                applicationContext,
+                                LocationUpdatingService::class.java
+                            )
+                        )
+                        Log.e(TAG, "API 레벨 26 이상")
+                    } else {
+                        //백그라운드 실행에 제약 없음
+                        startService(Intent(applicationContext, LocationUpdatingService::class.java))
+                        Log.e("우진", "API 레벨 25 이하")
+                    }
+                }
+                else{
 
-        stop.setOnClickListener {
-            stopService(intent)
-            Log.e("우진", "서비스 중지")
-        }
+                }
+            }
 
-//        locationUpdateWithFLC()
-//        locationUpdateWithLM()
-
-//        getLastLocationWithFLC()
-//        getLastLocationWithLM()
-    }
-
-    //FusedLocationProviderClient 사용
-    fun locationUpdateWithFLC() {
-
-        val locationRequest = LocationRequest.create()
-        locationRequest.run {
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-//            interval = 5 * 1000
-            fastestInterval = 1 * 1000
-            smallestDisplacement = 1.toFloat() //기본: 50미터
-        }
-
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-//            ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_CODE)
-            ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_CODE)
-        } else {
-            fusedLocationProviderClient.requestLocationUpdates(
-                locationRequest,
-                locationCallback,
-                null
-            )
-        }
-    }
-
-    fun getLastLocationWithFLC() {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_CODE)
-        } else {
-            fusedLocationProviderClient.lastLocation.addOnSuccessListener { location: Location? ->
-                Log.e(
-                    "우진",
-                    "[마지막 위치 by FLC]위도:${location?.latitude} 경도:${location?.longitude}"
-                )
+            todoList.forEach {
+                Log.e(TAG, it.doTodo)
             }
         }
+
+        val thread = Thread(r)
+        thread.start()
+
+        setViews()
     }
 
-    //LocationManager 사용
-    fun locationUpdateWithLM() {
+    override fun onDestroy() {
+        TodoDB.destroyInstance()
+        todoDb = null
+        super.onDestroy()
+    }
 
-        val INTERVAL = 1000.toLong()
-        val DISTANCE = 1.toFloat()
-
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_CODE)
-        } else {
-            locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER,
-                INTERVAL,
-                DISTANCE,
-                locationListener
-            )
-            locationManager.requestLocationUpdates(
-                LocationManager.NETWORK_PROVIDER,
-                INTERVAL,
-                DISTANCE,
-                locationListener
-            )
+    fun setViews() {
+        add_btn.setOnClickListener {
+            val intent = Intent(applicationContext, AddActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(intent)
         }
     }
 
-    fun getLastLocationWithLM() {
+    var simpleItemTouchCallback: ItemTouchHelper.SimpleCallback =
+        object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(
+                @NonNull recyclerView: RecyclerView,
+                @NonNull viewHolder: RecyclerView.ViewHolder,
+                @NonNull target: RecyclerView.ViewHolder
+            ): Boolean {
+                return false
+            }
 
-        var location: Location? = null
-
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_CODE)
-        } else {
-            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            Log.e("우진", "[마지막 위치 by LM]위도:${location?.latitude} 경도:${location?.longitude}")
+            override fun onSwiped(
+                @NonNull viewHolder: RecyclerView.ViewHolder,
+                direction: Int
+            ) {
+                val position = viewHolder.adapterPosition
+                val todo = todoList.removeAt(position)
+                mAdapter.notifyItemRemoved(position)
+                todoDb?.todoDao()?.delete(todo)
+            }
         }
-    }
 }
 
 
