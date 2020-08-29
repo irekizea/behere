@@ -1,10 +1,10 @@
 package com.behere.loc_based_reminder
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.database.DataSetObserver
 import android.os.Build
 import android.os.Bundle
 import android.util.Base64
@@ -15,9 +15,9 @@ import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-
 import com.behere.loc_based_reminder.service.LocationUpdatingService
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_service_start.*
 import java.security.MessageDigest
 
 const val TAG = "TODO"
@@ -27,6 +27,8 @@ class MainActivity : AppCompatActivity() {
     private var todoDb: TodoDB? = null
     private var todoList = mutableListOf<Todo>()
     lateinit var mAdapter: TodoAdapter
+
+    var startServiceIntent: Intent? = null
 
     private val LOCATION_REQUEST_CODE = 999
 
@@ -92,8 +94,8 @@ class MainActivity : AppCompatActivity() {
         val itemTouchHelper = ItemTouchHelper(simpleItemTouchCallback)
         itemTouchHelper.attachToRecyclerView(recycler_view)
 
+        startServiceIntent = Intent(this, LocationUpdatingService::class.java)
 
-        val intent = Intent(this, LocationUpdatingService::class.java)
         val r = Runnable {
             try {
                 todoList = (todoDb?.todoDao()?.getAll() as MutableList<Todo>?)!!
@@ -107,46 +109,59 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "Error - $e")
             }
 
-            if (LocationUpdatingService().serviceIntent != null) {
-                if (todoList.size == 0) {
-                    stopService(intent)
-                    Log.e(TAG, "Stop Service because No schedule")
-                }
-            } else {
+            if (LocationUpdatingService().serviceIntent == null) {
                 // At least one schedule
                 if (todoList.size > 0) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        //오레오 이상은 백그라운드로 실행하면 강제 종료 위험 있음 -> 포그라운드 실행해야
+<<<<<<< HEAD
+                        startForegroundService(startServiceIntent)
+                    } else {
+                        startService(startServiceIntent)
+                    }
+                    Log.e(TAG, "Start service")
+                } else {
+
+                    //No service, No schedule
+
+                }
+            } else {
+//                if (todoList.size == 0) {
+//                    stopService(startServiceIntent)
+//                    Log.e(TAG, "Stop service")
+//                }
+=======
                         startForegroundService(
                             Intent(
                                 applicationContext,
                                 LocationUpdatingService::class.java
                             )
                         )
-                        Log.e(TAG, "API 레벨 26 이상")
                     } else {
-                        //백그라운드 실행에 제약 없음
                         startService(
                             Intent(
                                 applicationContext,
                                 LocationUpdatingService::class.java
                             )
                         )
-                        Log.e("우진", "API 레벨 25 이하")
                     }
+                    Log.e(TAG, "Start service")
                 } else {
+                    //No service, No schedule
                 }
-                todoList.forEach {
-                    Log.e(TAG, it.doTodo)
+            } else {
+                if (todoList.size == 0) {
+                    stopService(intent)
+                    Log.e(TAG, "Stop service")
                 }
+>>>>>>> cbe3160359749089ed04250077cfecb3013cd9df
             }
         }
 
         val thread = Thread(r)
         thread.start()
+
         setViews()
     }
-
 
     override fun onDestroy() {
         TodoDB.destroyInstance()
@@ -181,6 +196,10 @@ class MainActivity : AppCompatActivity() {
                 val todo = todoList.removeAt(position)
                 mAdapter.notifyItemRemoved(position)
                 todoDb?.todoDao()?.delete(todo)
+                if (todoList.size == 0) {
+                    stopService(startServiceIntent)
+                    Log.e(TAG, "Stop service")
+                }
             }
         }
 

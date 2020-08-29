@@ -5,7 +5,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_add.*
-import kotlinx.android.synthetic.main.activity_main.*
+
+const val tag = "TODO"
 
 class AddActivity : AppCompatActivity() {
 
@@ -23,18 +24,16 @@ class AddActivity : AppCompatActivity() {
             val newTodo = Todo()
             newTodo.doPlace = location_edit.text.toString()
             newTodo.doTodo = todo_edit.text.toString()
-            newTodo.doAlert = alertSwitch.isChecked
+            newTodo.doAlert = alarm_switch.isChecked
             application.apiContainer.todoDao.insert(newTodo)
-            Log.e("주창",newTodo.doAlert.toString())
-
+            Log.e(tag, newTodo.doAlert.toString())
 
             val i = Intent(this, MainActivity::class.java)
             i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(i)
         }
 
-        back_btn.setOnClickListener{
-
+        back_btn.setOnClickListener {
             val i = Intent(this, MainActivity::class.java)
             i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(i)
