@@ -113,7 +113,6 @@ class MainActivity : AppCompatActivity() {
                 // At least one schedule
                 if (todoList.size > 0) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-<<<<<<< HEAD
                         startForegroundService(startServiceIntent)
                     } else {
                         startService(startServiceIntent)
@@ -125,35 +124,7 @@ class MainActivity : AppCompatActivity() {
 
                 }
             } else {
-//                if (todoList.size == 0) {
-//                    stopService(startServiceIntent)
-//                    Log.e(TAG, "Stop service")
-//                }
-=======
-                        startForegroundService(
-                            Intent(
-                                applicationContext,
-                                LocationUpdatingService::class.java
-                            )
-                        )
-                    } else {
-                        startService(
-                            Intent(
-                                applicationContext,
-                                LocationUpdatingService::class.java
-                            )
-                        )
-                    }
-                    Log.e(TAG, "Start service")
-                } else {
-                    //No service, No schedule
-                }
-            } else {
-                if (todoList.size == 0) {
-                    stopService(intent)
-                    Log.e(TAG, "Stop service")
-                }
->>>>>>> cbe3160359749089ed04250077cfecb3013cd9df
+
             }
         }
 

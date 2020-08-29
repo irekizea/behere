@@ -33,7 +33,7 @@
         <activity android:name=".MainActivity"></activity>
         <activity
             android:name=".AddActivity"
-            android:windowSoftInputMode="adjustNothing" />
+            android:windowSoftInputMode="adjustResize" />
 
         <service
             android:name=".service.LocationUpdatingService"

@@ -90,7 +90,7 @@ class LocationUpdatingService : Service() {
     }
 
     fun requestLocationUpdateByLM() {
-        val INTERVAL = (1000 * 30).toLong() // 1sec
+        val INTERVAL = (1000 * 10).toLong() // 10sec
         val DISTANCE = 1.toFloat() // 1m
 
         locationListener = object : android.location.LocationListener {
@@ -106,7 +106,7 @@ class LocationUpdatingService : Service() {
                 val temp = queries.toTypedArray()
                 application.apiContainer.storeListServiceRepository
                     .getToDoStoreListNearBy(
-                        100,
+                        20,
                         location.longitude.toFloat(),
                         location.latitude.toFloat(),
                         1000,
@@ -153,7 +153,7 @@ class LocationUpdatingService : Service() {
                                 )
                                     .setContentTitle("근접 알림")
                                     .setContentText("${map.size}개의 알림이 있습니다.")
-                                    .setSmallIcon(R.drawable.bell)
+                                    .setSmallIcon(R.drawable.alarm)
                                     .setGroup(NOTI_GROUP)
                                     .setGroupSummary(true)
                                     .build()
@@ -211,7 +211,8 @@ class LocationUpdatingService : Service() {
         val locationRequest = LocationRequest.create()
         locationRequest.run {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-            fastestInterval = 60 * 1000
+            smallestDisplacement = 1f //lm
+            fastestInterval = 10 * 1000 //10sec
         }
 
         locationCallback = object : LocationCallback() {
@@ -232,7 +233,7 @@ class LocationUpdatingService : Service() {
                     val temp = queries.toTypedArray()
                     application.apiContainer.storeListServiceRepository
                         .getToDoStoreListNearBy(
-                            100,
+                            20,
                             location.longitude.toFloat(),
                             location.latitude.toFloat(),
                             1000,
@@ -279,7 +280,7 @@ class LocationUpdatingService : Service() {
                                     )
                                         .setContentTitle("근접 알림")
                                         .setContentText("${map.size}개의 알림이 있습니다.")
-                                        .setSmallIcon(R.drawable.bell)
+                                        .setSmallIcon(R.drawable.alarm)
                                         .setGroup(NOTI_GROUP)
                                         .setGroupSummary(true)
                                         .build()
