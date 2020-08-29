@@ -15,6 +15,7 @@ import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+
 import com.behere.loc_based_reminder.service.LocationUpdatingService
 import kotlinx.android.synthetic.main.activity_main.*
 import java.security.MessageDigest
@@ -41,6 +42,8 @@ class MainActivity : AppCompatActivity() {
             for (signature in info.signatures) {
                 val md = MessageDigest.getInstance("SHA")
                 md.update(signature.toByteArray())
+
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
                     Log.d("KeyHash : ", Base64.encodeToString(md.digest(), Base64.DEFAULT))
                 }
@@ -89,6 +92,7 @@ class MainActivity : AppCompatActivity() {
         val itemTouchHelper = ItemTouchHelper(simpleItemTouchCallback)
         itemTouchHelper.attachToRecyclerView(recycler_view)
 
+
         val intent = Intent(this, LocationUpdatingService::class.java)
         val r = Runnable {
             try {
@@ -128,10 +132,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else{
-
                 }
-            }
-
             todoList.forEach {
                 Log.e(TAG, it.doTodo)
             }

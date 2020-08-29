@@ -12,33 +12,26 @@
     <application
         android:name=".CommonApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/check_list"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-
-        <activity android:name=".MapActivity">
-            <intent-filter>
-                <action android:name="com.behere.loc_based_reminder.FIND_ACTION"/>
-            </intent-filter>
-        </activity>
-        <activity android:name=".MainActivity">
+        <activity android:name=".loading.LoadingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".ListActivity">
+        <activity android:name=".MapActivity">
             <intent-filter>
-                <action android:name="com.behere.loc_based_reminder.FIND_ACTION"/>
+                <action android:name="com.behere.loc_based_reminder.FIND_ACTION" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".AddActivity">
-        </activity>
+        <activity android:name=".MainActivity"></activity>
+        <activity android:name=".AddActivity" android:windowSoftInputMode="adjustResize"/>
 
         <service
             android:name=".service.LocationUpdatingService"
@@ -51,6 +44,9 @@
             </intent-filter>
         </receiver>
 
-        <meta-data android:name="com.kakao.sdk.AppKey" android:value="91b39e9915563e0c71ac6643bb39b5c8"/>
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="91b39e9915563e0c71ac6643bb39b5c8" />
     </application>
+
 </manifest>
