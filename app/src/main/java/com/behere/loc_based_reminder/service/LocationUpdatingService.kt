@@ -289,8 +289,12 @@ class LocationUpdatingService : Service() {
             }
         }
 
-        //Service starts with notification pinning
-        startForeground(FOREGROUND_NOTIFICATION_ID, notification)
+
+        //알림과 함께 서비스 시작
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR) {
+            startForeground(FOREGROUND_NOTIFICATION_ID, notification)
+        }
+
     }
 
     private fun setEventNotification(item: Item, id: Int): NotificationCompat.Builder {
