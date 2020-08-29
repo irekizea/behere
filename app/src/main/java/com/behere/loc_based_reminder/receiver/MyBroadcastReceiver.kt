@@ -7,13 +7,14 @@ import android.os.Build
 import android.util.Log
 import com.behere.loc_based_reminder.service.LocationUpdatingService
 
+const val TAG = "TODO"
 class MyBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         when {
             intent?.action == Intent.ACTION_BOOT_COMPLETED -> {
 
-                Log.e("우진", "Boot Complete 브로드캐스트 실행")
+                Log.e(TAG, "Boot Complete 브로드캐스트 실행")
 
                 context.let {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -24,7 +25,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
                                 LocationUpdatingService::class.java
                             )
                         )
-                        Log.e("우진", "API 레벨 26 이상")
+                        Log.e(TAG, "API 레벨 26 이상")
                     } else {
                         //백그라운드 실행에 제약 없음
                         it?.startService(
@@ -33,7 +34,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
                                 LocationUpdatingService::class.java
                             )
                         )
-                        Log.e("우진", "API 레벨 25 이하")
+                        Log.e(TAG, "API 레벨 25 이하")
 //                    }
                     }
                 }

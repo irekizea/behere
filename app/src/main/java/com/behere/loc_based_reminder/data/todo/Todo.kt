@@ -1,4 +1,4 @@
-package com.behere.loc_based_reminder
+package com.behere.loc_based_reminder.data.todo
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

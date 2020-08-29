@@ -31,13 +31,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ListActivity">
-            <intent-filter>
-                <action android:name="com.behere.loc_based_reminder.FIND_ACTION"/>
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".AddActivity">
+        <activity android:name=".AddActivity"
+            android:windowSoftInputMode="adjustNothing">
         </activity>
 
         <service

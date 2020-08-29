@@ -16,8 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.behere.loc_based_reminder.CommonApplication
-import com.behere.loc_based_reminder.ListActivity
-import com.behere.loc_based_reminder.MapActivity
+import com.behere.loc_based_reminder.MainActivity
 import com.behere.loc_based_reminder.R
 import com.behere.loc_based_reminder.data.response.Item
 import com.behere.loc_based_reminder.receiver.MyBroadcastReceiver
@@ -25,6 +24,7 @@ import com.behere.loc_based_reminder.util.writeFile
 import com.google.android.gms.location.*
 import org.json.JSONArray
 
+const val TAG = "TODO"
 
 const val FIND_ACTION = "com.behere.loc_based_reminder.FIND_ACTION"
 const val FILE_NAME = "find.json"
@@ -111,7 +111,7 @@ class LocationUpdatingService : Service() {
         locationListener = object : android.location.LocationListener {
             override fun onLocationChanged(location: Location) {
                 Log.e(
-                    "우진",
+                    TAG,
                     "[업데이트된 위치 by LM] 위도: ${location.latitude} 경도: ${location.longitude}"
                 )
             }
@@ -134,7 +134,7 @@ class LocationUpdatingService : Service() {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("우진", "위치 권한 없음")
+            Log.e(TAG, "위치 권한 없음")
             return
         } else {
             locationManager.requestLocationUpdates(
@@ -170,7 +170,7 @@ class LocationUpdatingService : Service() {
                 for (location in locationResult.locations) {
 
                     Log.e(
-                        "우진",
+                        TAG,
                         "[업데이트된 위치 by FLC] 위도: ${location.latitude} 경도: ${location.longitude}"
                     )
 
@@ -188,7 +188,7 @@ class LocationUpdatingService : Service() {
                             location.latitude.toFloat(),
                             100,
                             success = {
-                                Log.e("우진 다원", "Success Result $it")
+                                Log.e(TAG, "Success Result $it")
                                 val arr = JSONArray()
                                 var id = EVENT_NOTIFICATION_ID
 //                                for (item in it) {
@@ -200,7 +200,7 @@ class LocationUpdatingService : Service() {
 
                                 //TODO:점포 이름 다르게 들어오는 거 확인.
                                 for (item in it) {
-                                    Log.e("우진","${storeList.toString()}")
+                                    Log.e(TAG,"${storeList.toString()}")
                                     if(id == EVENT_NOTIFICATION_ID){
                                         storeList.add(item.bizesNm)
                                         with(NotificationManagerCompat.from(applicationContext))
@@ -241,7 +241,7 @@ class LocationUpdatingService : Service() {
                                 //알림 표시
                             },
                             fail = {
-                                Log.e("우진 다원", "Fail Result $it")
+                                Log.e(TAG, "Fail Result $it")
                             },
                             queries = *temp
                         )
@@ -265,9 +265,9 @@ class LocationUpdatingService : Service() {
 
     inner class HandlerWithLooper(looper: Looper) : Handler(looper) {
         override fun handleMessage(msg: Message) {
-            Log.e("우진", "스레드 실행 중입니다.")
+            Log.e(TAG, "스레드 실행 중입니다.")
             when (msg.what) {
-                1 -> Log.e("우진", "핸들러 메시지 수신 성공")
+                1 -> Log.e(TAG, "핸들러 메시지 수신 성공")
             }
         }
     }
@@ -304,7 +304,7 @@ class LocationUpdatingService : Service() {
 
     private fun setEventNotification(item: Item, id: Int) : NotificationCompat.Builder{
         //알림 클릭 시, 앱 진입
-        val intent = Intent(this, ListActivity::class.java).apply {
+        val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             action = FIND_ACTION
             putExtra("item", item)

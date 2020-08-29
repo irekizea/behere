@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.behere.loc_based_reminder.data.todo.Todo
 
 @Database(entities = [Todo::class], version = 2)
 abstract class TodoDB: RoomDatabase() {

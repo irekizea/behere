@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.database.DataSetObserver
 import android.os.Build
 import android.os.Bundle
 import android.util.Base64
@@ -15,6 +14,7 @@ import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.behere.loc_based_reminder.data.todo.Todo
 import com.behere.loc_based_reminder.service.LocationUpdatingService
 import kotlinx.android.synthetic.main.activity_main.*
 import java.security.MessageDigest
@@ -65,7 +65,6 @@ class MainActivity : AppCompatActivity() {
             if (isBackgroundLocationPermissionApproved) {
                 //All permissions are granted
             } else {
-                //User not allowed background location permission
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
@@ -103,32 +102,33 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "Error - $e")
             }
 
-            if(LocationUpdatingService().serviceIntent != null){
-                if(todoList.size == 0){
-                    stopService(intent)
-                    Log.e(TAG, "Stop Service because No schedule")
-                }
-            }
-            else{
-                // At least one schedule
-                if(todoList.size>0){
+            //Run Service
+            if (todoList.size > 0) {
+                if (LocationUpdatingService().serviceIntent != null) {
+                    //Service is already running
+                } else {
+                    //Start Service
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        //오레오 이상은 백그라운드로 실행하면 강제 종료 위험 있음 -> 포그라운드 실행해야
                         startForegroundService(
                             Intent(
                                 applicationContext,
                                 LocationUpdatingService::class.java
                             )
                         )
-                        Log.e(TAG, "API 레벨 26 이상")
                     } else {
-                        //백그라운드 실행에 제약 없음
-                        startService(Intent(applicationContext, LocationUpdatingService::class.java))
-                        Log.e("우진", "API 레벨 25 이하")
+                        startService(
+                            Intent(
+                                applicationContext,
+                                LocationUpdatingService::class.java
+                            )
+                        )
                     }
+                    Log.e(TAG, "Start service")
                 }
-                else{
-
+            } else {
+                if(LocationUpdatingService().serviceIntent != null){
+                    stopService(intent)
+                    Log.e(TAG, "Stop service")
                 }
             }
 
