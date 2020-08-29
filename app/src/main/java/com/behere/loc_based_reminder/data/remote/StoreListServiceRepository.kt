@@ -1,11 +1,13 @@
 package com.behere.loc_based_reminder.data.remote
 
 import android.app.DownloadManager
+import com.behere.loc_based_reminder.TodoDao
 import com.behere.loc_based_reminder.data.response.Item
 
 class StoreListServiceRepository(
     private val storeListServiceRemoteDataSource:
-    StoreListServiceRemoteDataSource
+    StoreListServiceRemoteDataSource,
+    private val todoDao: TodoDao
 ) {
 
     private fun getAllStoreListNearBy(
@@ -55,6 +57,16 @@ class StoreListServiceRepository(
         numOfRows: Int
     ) {
         storeListServiceRemoteDataSource.getStoreListString(radius, cx, cy, numOfRows, 1)
+    }
+
+    fun getPlace(): List<String> {
+        val list = ArrayList<String>()
+        for (todo in todoDao.getAll()) {
+            todo.doPlace?.let {
+                list.add(it)
+            }
+        }
+        return list
     }
 
 }
