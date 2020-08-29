@@ -20,11 +20,11 @@ import org.json.JSONArray
 import java.io.File
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+
     lateinit var map: GoogleMap
     lateinit var result: List<Item>
     var lat: Double = 37.56
     var lng: Double = 126.97
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
