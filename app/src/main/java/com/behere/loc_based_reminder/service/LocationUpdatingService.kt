@@ -154,14 +154,12 @@ class LocationUpdatingService : Service() {
                     )
 
                     val application = application as CommonApplication
-                    val queries = ArrayList<String>()
-                    queries.add("다이소")
-                    queries.add("GS25")
-                    queries.add("편의점")
+                    val queries = application.apiContainer.storeListServiceRepository?.getPlace()
+                    if (queries.isNullOrEmpty()) return
                     val temp = queries.toTypedArray()
                     application.apiContainer.storeListServiceRepository
                         .getToDoStoreListNearBy(
-                            500,
+                            1000,
                             location.longitude.toFloat(),
                             location.latitude.toFloat(),
                             100,
@@ -193,26 +191,27 @@ class LocationUpdatingService : Service() {
                                     id++
                                 }
 
-                                val summaryNotification = NotificationCompat.Builder(
-                                    applicationContext,
-                                    ANDROID_CHANNEL_ID
-                                )
-                                    .setContentTitle("근접 알림")
-                                    //set content text to support devices running API level < 24
-                                    .setContentText("${map.size}개의 알림이 있습니다.")
-                                    .setSmallIcon(R.drawable.bell)
-                                    //build summary info into InboxStyle template
-                                    //specify which group this notification belongs to
-                                    .setGroup(NOTI_GROUP)
-                                    //set this notification as the summary for the group
-                                    .setGroupSummary(true)
-                                    .build()
+                                if (map.size > 1) {
+                                    val summaryNotification = NotificationCompat.Builder(
+                                        applicationContext,
+                                        ANDROID_CHANNEL_ID
+                                    )
+                                        .setContentTitle("근접 알림")
+                                        //set content text to support devices running API level < 24
+                                        .setContentText("${map.size}개의 알림이 있습니다.")
+                                        .setSmallIcon(R.drawable.bell)
+                                        //build summary info into InboxStyle template
+                                        //specify which group this notification belongs to
+                                        .setGroup(NOTI_GROUP)
+                                        //set this notification as the summary for the group
+                                        .setGroupSummary(true)
+                                        .build()
 
-                                with(NotificationManagerCompat.from(applicationContext)) {
-                                    notify(EVENT_SUMMARY_ID, summaryNotification)
+                                    with(NotificationManagerCompat.from(applicationContext)) {
+                                        notify(EVENT_SUMMARY_ID, summaryNotification)
+                                    }
                                 }
-
-                                writeFile(FILE_NAME, applicationContext, arr.toString())
+                                //writeFile(FILE_NAME, applicationContext, arr.toString())
                                 //알림 표시
                             },
                             fail = {
