@@ -33,7 +33,6 @@ class AddActivity : AppCompatActivity() {
             startActivity(i)
         }
 
-
         back_btn.setOnClickListener{
 
             val i = Intent(this, MainActivity::class.java)

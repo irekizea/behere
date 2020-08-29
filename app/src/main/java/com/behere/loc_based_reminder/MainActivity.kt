@@ -43,10 +43,10 @@ class MainActivity : AppCompatActivity() {
                 val md = MessageDigest.getInstance("SHA")
                 md.update(signature.toByteArray())
 
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
                     Log.d("KeyHash : ", Base64.encodeToString(md.digest(), Base64.DEFAULT))
                 }
-
             }
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
@@ -92,6 +92,7 @@ class MainActivity : AppCompatActivity() {
         val itemTouchHelper = ItemTouchHelper(simpleItemTouchCallback)
         itemTouchHelper.attachToRecyclerView(recycler_view)
 
+
         val intent = Intent(this, LocationUpdatingService::class.java)
         val r = Runnable {
             try {
@@ -111,7 +112,6 @@ class MainActivity : AppCompatActivity() {
                     stopService(intent)
                     Log.e(TAG, "Stop Service because No schedule")
                 }
-
             }
             else{
                 // At least one schedule
@@ -132,35 +132,10 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else{
-
-
                 }
-            }
-            else{
-                // At least one schedule
-                if(todoList.size>0){
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        //오레오 이상은 백그라운드로 실행하면 강제 종료 위험 있음 -> 포그라운드 실행해야
-                        startForegroundService(
-                            Intent(
-                                applicationContext,
-                                LocationUpdatingService::class.java
-                            )
-                        )
-                        Log.e(TAG, "API 레벨 26 이상")
-                    } else {
-                        //백그라운드 실행에 제약 없음
-                        startService(Intent(applicationContext, LocationUpdatingService::class.java))
-                        Log.e("우진", "API 레벨 25 이하")
-                    }
-                }
-                else{
-
-
             todoList.forEach {
                 Log.e(TAG, it.doTodo)
             }
-
         }
 
         val thread = Thread(r)
