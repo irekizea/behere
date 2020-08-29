@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_add.*
+import kotlinx.android.synthetic.main.activity_main.*
 
 class AddActivity : AppCompatActivity() {
 
@@ -17,21 +18,21 @@ class AddActivity : AppCompatActivity() {
         todoDb = TodoDB.getInstance(this)
 
         // 새로운 todo 객체를 생성, id 이외의 값을 지정 후 DB에 추가
-        addBtn.setOnClickListener {
+        save_btn.setOnClickListener {
             val newTodo = Todo()
-            newTodo.doPlace = addPlace.text.toString()
-            newTodo.doTodo = addTodo.text.toString()
+            newTodo.doPlace = location_edit.text.toString()
+            newTodo.doTodo = todo_edit.text.toString()
             newTodo.doAlert = alertSwitch.isChecked
             application.apiContainer.todoDao.insert(newTodo)
             Log.e("주창",newTodo.doAlert.toString())
 
-            val i = Intent(this, ListActivity::class.java)
+            val i = Intent(this, MainActivity::class.java)
             i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(i)
         }
 
-        ic_return.setOnClickListener{
-            val i = Intent(this, ListActivity::class.java)
+        back_btn.setOnClickListener{
+            val i = Intent(this, MainActivity::class.java)
             i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(i)
         }

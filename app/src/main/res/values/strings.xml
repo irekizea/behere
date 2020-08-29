@@ -1,3 +1,18 @@
 <resources>
-    <string name="app_name">여기있소</string>
+    <string name="app_name">TO DO</string>
+
+    <!--    TO DO -->
+    <string name="title">등록</string>
+    <string name="todo">할 일</string>
+    <string name="date">시간</string>
+    <string name="location">장소</string>
+    <string name="notification">알림 설정 > </string>
+    <string name="memo">메모</string>
+    <string name="save">저장</string>
+
+    <!--    Permission check -->
+    <string name="permission_denied_dialog">위치 권한이 \'항상 허용\'이 아닙니다.\n 앱 실행 시에만 장소 접근 알림이 제공됩니다.</string>
+    <string name="ok">유지</string>
+    <string name="reset">재설정</string>
+
 </resources>

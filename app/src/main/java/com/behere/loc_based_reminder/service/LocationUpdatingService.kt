@@ -31,6 +31,9 @@ const val FILE_NAME = "find.json"
 const val NOTI_GROUP = "com.behere.loc_based_reminder.NOTI_GROUP"
 class LocationUpdatingService : Service() {
 
+    companion object var serviceIntent: Intent? = null
+
+
     private val ANDROID_CHANNEL_ID = "my.kotlin.application.test200812"
     private val FOREGROUND_NOTIFICATION_ID = 1
     private val EVENT_SUMMARY_ID = 9
@@ -294,7 +297,9 @@ class LocationUpdatingService : Service() {
         val notification = builder.build()
 
         //알림과 함께 서비스 시작
-        startForeground(FOREGROUND_NOTIFICATION_ID, notification)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR) {
+            startForeground(FOREGROUND_NOTIFICATION_ID, notification)
+        }
     }
 
     private fun setEventNotification(item: Item, id: Int) : NotificationCompat.Builder{
