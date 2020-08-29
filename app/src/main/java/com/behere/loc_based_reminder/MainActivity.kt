@@ -1,6 +1,7 @@
 package com.behere.loc_based_reminder
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.behere.loc_based_reminder.service.LocationUpdatingService
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_service_start.*
 import java.security.MessageDigest
 
 const val TAG = "TODO"
@@ -25,6 +27,8 @@ class MainActivity : AppCompatActivity() {
     private var todoDb: TodoDB? = null
     private var todoList = mutableListOf<Todo>()
     lateinit var mAdapter: TodoAdapter
+
+    var startServiceIntent: Intent? = null
 
     private val LOCATION_REQUEST_CODE = 999
 
@@ -90,8 +94,8 @@ class MainActivity : AppCompatActivity() {
         val itemTouchHelper = ItemTouchHelper(simpleItemTouchCallback)
         itemTouchHelper.attachToRecyclerView(recycler_view)
 
+        startServiceIntent = Intent(this, LocationUpdatingService::class.java)
 
-        val intent = Intent(this, LocationUpdatingService::class.java)
         val r = Runnable {
             try {
                 todoList = (todoDb?.todoDao()?.getAll() as MutableList<Todo>?)!!
@@ -109,29 +113,21 @@ class MainActivity : AppCompatActivity() {
                 // At least one schedule
                 if (todoList.size > 0) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        startForegroundService(
-                            Intent(
-                                applicationContext,
-                                LocationUpdatingService::class.java
-                            )
-                        )
+                        startForegroundService(startServiceIntent)
                     } else {
-                        startService(
-                            Intent(
-                                applicationContext,
-                                LocationUpdatingService::class.java
-                            )
-                        )
+                        startService(startServiceIntent)
                     }
                     Log.e(TAG, "Start service")
                 } else {
+
                     //No service, No schedule
+
                 }
             } else {
-                if (todoList.size == 0) {
-                    stopService(intent)
-                    Log.e(TAG, "Stop service")
-                }
+//                if (todoList.size == 0) {
+//                    stopService(startServiceIntent)
+//                    Log.e(TAG, "Stop service")
+//                }
             }
         }
 
@@ -174,6 +170,10 @@ class MainActivity : AppCompatActivity() {
                 val todo = todoList.removeAt(position)
                 mAdapter.notifyItemRemoved(position)
                 todoDb?.todoDao()?.delete(todo)
+                if (todoList.size == 0) {
+                    stopService(startServiceIntent)
+                    Log.e(TAG, "Stop service")
+                }
             }
         }
 
