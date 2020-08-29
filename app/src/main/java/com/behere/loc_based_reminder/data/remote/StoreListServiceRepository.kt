@@ -39,7 +39,8 @@ class StoreListServiceRepository(
         getAllStoreListNearBy(radius, cx, cy, numOfRows, success = {
             for (item in it) {
                 for (query in queries) {
-                    if (item.bizesNm.contains(query)) {
+                    if (query.isNullOrEmpty() || query.isNullOrBlank()) continue
+                    if (item.bizesNm.contains(query) || item.indsSclsNm.contains(query) || item.ksicNm.contains(query)) {
                         list.add(item)
                     }
                 }
