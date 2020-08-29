@@ -6,13 +6,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.item_todo_woojin.view.*
+import kotlinx.android.synthetic.main.item_todo.view.*
 
 class TodoAdapter(val context: Context, val todos: List<Todo>) :
     RecyclerView.Adapter<TodoAdapter.Holder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
-        val view = LayoutInflater.from(context).inflate(R.layout.item_todo_woojin, parent, false)
+        val view = LayoutInflater.from(context).inflate(R.layout.item_todo, parent, false)
         return Holder(view)
     }
 
@@ -29,12 +29,12 @@ class TodoAdapter(val context: Context, val todos: List<Todo>) :
                 it.isSelected = true
             } else {
                 holder.todo_content.paintFlags = Paint.ANTI_ALIAS_FLAG
-                it.isSelected =false
+                it.isSelected = false
             }
         }
     }
 
-//    inner class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    //    inner class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 //        val placeTv = itemView?.findViewById<TextView>(R.id.itemPlace)
 //
 //        val todoTv = itemView?.findViewById<TextView>(R.id.itemTodo)

@@ -16,7 +16,6 @@ import com.behere.loc_based_reminder.CommonApplication
 import com.behere.loc_based_reminder.MapActivity
 import com.behere.loc_based_reminder.R
 import com.behere.loc_based_reminder.data.response.Item
-import com.behere.loc_based_reminder.util.writeFile
 import com.google.android.gms.location.*
 import org.json.JSONArray
 
@@ -27,10 +26,12 @@ const val NOTI_GROUP = "com.behere.loc_based_reminder.NOTI_GROUP"
 
 class LocationUpdatingService : Service() {
 
-    companion object var serviceIntent: Intent? = null
+    companion object
+
+    var serviceIntent: Intent? = null
 
     private val ANDROID_CHANNEL_ID = "my.kotlin.application.test200812"
-    private val FOREGROUND_NOTIFICATION_ID = 1
+    private val STICK_NOTIFICATION_ID = 1
     private val EVENT_SUMMARY_ID = 9
     private val EVENT_NOTIFICATION_ID = 9
 
@@ -59,6 +60,10 @@ class LocationUpdatingService : Service() {
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager //for LM
 
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        serviceIntent = intent
 
         //Run the service in a different thread
         val handlerThread = HandlerThread("TODO Thread")
@@ -72,12 +77,9 @@ class LocationUpdatingService : Service() {
         //Stick a Notification for Foreground service
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
-            createForegroundNotification(NotificationMode.normal)
+            createStickNotification(NotificationMode.normal)
         }
-    }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        serviceIntent = intent
         return START_NOT_STICKY
     }
 
@@ -144,7 +146,7 @@ class LocationUpdatingService : Service() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
                 super.onLocationResult(locationResult)
-                locationResult ?: createForegroundNotification(NotificationMode.issue)
+                locationResult ?: createStickNotification(NotificationMode.issue)
 
                 for (location in locationResult!!.locations) {
 
@@ -171,10 +173,10 @@ class LocationUpdatingService : Service() {
                                 //TODO:점포 이름 다르게 들어오는 거 확인.
                                 for (item in it) {
                                     for (q in queries) {
-                                        Log.e("다원", "query : $q")
+                                        Log.e(TAG, "query : $q")
                                         if (item.bizesNm.contains(q)) {
                                             if (!map.containsKey(q)) {
-                                                Log.e("다원", "query not contains : $q")
+                                                Log.e(TAG, "query not contains : $q")
                                                 map[q] = ArrayList<Item>()
                                             }
                                             map[q]?.add(item)
@@ -183,10 +185,18 @@ class LocationUpdatingService : Service() {
                                 }
 
                                 for (value in map) {
-                                    Log.e("다원", "noti : ${value.key}")
+                                    Log.e(TAG, "noti : ${value.key}")
                                     with(NotificationManagerCompat.from(applicationContext))
                                     {
-                                        notify(id, setEventNotification(location, value.key, value.value, id)!!.build())
+                                        notify(
+                                            id,
+                                            setEventNotification(
+                                                location,
+                                                value.key,
+                                                value.value,
+                                                id
+                                            )!!.build()
+                                        )
                                     }
                                     id++
                                 }
@@ -252,14 +262,14 @@ class LocationUpdatingService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 ANDROID_CHANNEL_ID,
-                "ReminderService",
+                "TODO Service",
                 NotificationManager.IMPORTANCE_NONE
             )
             notificationManager!!.createNotificationChannel(channel)
         }
     }
 
-    private fun createForegroundNotification(notificationMode: NotificationMode) {
+    private fun createStickNotification(notificationMode: NotificationMode) {
 
         //Create notification object
         var notification: Notification? = null
@@ -281,40 +291,17 @@ class LocationUpdatingService : Service() {
             }
         }
 
-
-        //알림과 함께 서비스 시작
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR) {
-            startForeground(FOREGROUND_NOTIFICATION_ID, notification)
-        }
-
+        //Service starts with notification pinning
+        startForeground(STICK_NOTIFICATION_ID, notification)
     }
 
-    private fun setEventNotification(item: Item, id: Int): NotificationCompat.Builder {
-        //알림 클릭 시, 앱 진입
-        val intent = Intent(this, MapActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            action = FIND_ACTION
-            putExtra("item", item)
-        }
-
-        val pendingIntent: PendingIntent =
-            PendingIntent.getActivity(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-
-        //알림 콘텐츠 설정
-        return NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
-            .setSmallIcon(R.drawable.bell)
-            .setContentTitle("${item.bizesNm}")
-            .setContentText("할 일 설정 장소 ${item.bizesNm}가 인접한 곳에 있습니다.")
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .setGroup(NOTI_GROUP)
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
-    }
-
-    private fun setEventNotification(location: Location, q: String, items: ArrayList<Item>, id: Int): NotificationCompat.Builder {
-        //알림 클릭 시, 앱 진입
+    private fun setEventNotification(
+        location: Location,
+        q: String,
+        items: ArrayList<Item>,
+        id: Int
+    ): NotificationCompat.Builder {
+        //When clicking on the notification, enter the app
         val intent = Intent(this, MapActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             action = FIND_ACTION
@@ -326,9 +313,9 @@ class LocationUpdatingService : Service() {
         val pendingIntent: PendingIntent =
             PendingIntent.getActivity(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
-        //알림 콘텐츠 설정
+        //Set notification content
         return NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
-            .setSmallIcon(R.drawable.bell)
+            .setSmallIcon(R.drawable.alarm)
             .setContentTitle(q)
             .setContentText("할 일 설정 장소 $q 가 인접한 곳에 있습니다.")
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
