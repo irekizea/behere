@@ -17,7 +17,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.behere.loc_based_reminder.CommonApplication
 import com.behere.loc_based_reminder.ListActivity
-import com.behere.loc_based_reminder.MapActivity
 import com.behere.loc_based_reminder.R
 import com.behere.loc_based_reminder.data.response.Item
 import com.behere.loc_based_reminder.receiver.MyBroadcastReceiver
