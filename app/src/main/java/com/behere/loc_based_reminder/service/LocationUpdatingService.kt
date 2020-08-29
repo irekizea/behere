@@ -153,8 +153,6 @@ class LocationUpdatingService : Service() {
                         "[location(FLC)] latitude: ${location.latitude} longitude: ${location.longitude}"
                     )
 
-                    var storeList = mutableListOf<String>()
-
                     val application = application as CommonApplication
                     val queries = ArrayList<String>()
                     queries.add("다이소")
@@ -170,34 +168,29 @@ class LocationUpdatingService : Service() {
                             success = {
                                 Log.e(TAG, "Success Result $it")
                                 val arr = JSONArray()
+                                val map = HashMap<String, ArrayList<Item>>()
                                 var id = EVENT_NOTIFICATION_ID
-//                                for (item in it) {
-//                                    with(NotificationManagerCompat.from(applicationContext)) {
-//                                        notify(id, setEventNotification(item, id)!!.build())
-//                                    }
-//                                    id += 1
-//                                }
-
                                 //TODO:점포 이름 다르게 들어오는 거 확인.
                                 for (item in it) {
-                                    Log.e(TAG, "${storeList.toString()}")
-                                    if (id == EVENT_NOTIFICATION_ID) {
-                                        storeList.add(item.bizesNm)
-                                        with(NotificationManagerCompat.from(applicationContext))
-                                        {
-                                            notify(id, setEventNotification(item, id)!!.build())
-                                        }
-                                        id++
-                                    } else {
-                                        if (!storeList!!.contains(item.bizesNm)) {
-                                            storeList.add(item.bizesNm)
-                                            with(NotificationManagerCompat.from(applicationContext))
-                                            {
-                                                notify(id, setEventNotification(item, id)!!.build())
+                                    for (q in queries) {
+                                        Log.e("다원", "query : $q")
+                                        if (item.bizesNm.contains(q)) {
+                                            if (!map.containsKey(q)) {
+                                                Log.e("다원", "query not contains : $q")
+                                                map[q] = ArrayList<Item>()
                                             }
-                                            id++
+                                            map[q]?.add(item)
                                         }
                                     }
+                                }
+
+                                for (value in map) {
+                                    Log.e("다원", "noti : ${value.key}")
+                                    with(NotificationManagerCompat.from(applicationContext))
+                                    {
+                                        notify(id, setEventNotification(location, value.key, value.value, id)!!.build())
+                                    }
+                                    id++
                                 }
 
                                 val summaryNotification = NotificationCompat.Builder(
@@ -206,7 +199,7 @@ class LocationUpdatingService : Service() {
                                 )
                                     .setContentTitle("근접 알림")
                                     //set content text to support devices running API level < 24
-                                    .setContentText("${it.size}개의 알림이 있습니다.")
+                                    .setContentText("${map.size}개의 알림이 있습니다.")
                                     .setSmallIcon(R.drawable.bell)
                                     //build summary info into InboxStyle template
                                     //specify which group this notification belongs to
@@ -260,7 +253,7 @@ class LocationUpdatingService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 ANDROID_CHANNEL_ID,
-                "TODO Service",
+                "ReminderService",
                 NotificationManager.IMPORTANCE_NONE
             )
             notificationManager!!.createNotificationChannel(channel)
@@ -313,6 +306,32 @@ class LocationUpdatingService : Service() {
             .setSmallIcon(R.drawable.bell)
             .setContentTitle("${item.bizesNm}")
             .setContentText("할 일 설정 장소 ${item.bizesNm}가 인접한 곳에 있습니다.")
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setGroup(NOTI_GROUP)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+    }
+
+    private fun setEventNotification(location: Location, q: String, items: ArrayList<Item>, id: Int): NotificationCompat.Builder {
+        //알림 클릭 시, 앱 진입
+        val intent = Intent(this, MapActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+            action = FIND_ACTION
+            putParcelableArrayListExtra("items", items)
+            putExtra("lat", location.latitude)
+            putExtra("lng", location.longitude)
+        }
+
+        val pendingIntent: PendingIntent =
+            PendingIntent.getActivity(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        //알림 콘텐츠 설정
+        return NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
+            .setSmallIcon(R.drawable.bell)
+            .setContentTitle(q)
+            .setContentText("할 일 설정 장소 $q 가 인접한 곳에 있습니다.")
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
