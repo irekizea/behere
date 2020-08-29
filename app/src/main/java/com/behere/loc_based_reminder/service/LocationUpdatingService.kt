@@ -1,10 +1,7 @@
 package com.behere.loc_based_reminder.service
 
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,23 +13,21 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.behere.loc_based_reminder.CommonApplication
-import com.behere.loc_based_reminder.ListActivity
 import com.behere.loc_based_reminder.MapActivity
 import com.behere.loc_based_reminder.R
 import com.behere.loc_based_reminder.data.response.Item
-import com.behere.loc_based_reminder.receiver.MyBroadcastReceiver
 import com.behere.loc_based_reminder.util.writeFile
 import com.google.android.gms.location.*
 import org.json.JSONArray
 
-
+const val TAG = "TODO"
 const val FIND_ACTION = "com.behere.loc_based_reminder.FIND_ACTION"
 const val FILE_NAME = "find.json"
 const val NOTI_GROUP = "com.behere.loc_based_reminder.NOTI_GROUP"
+
 class LocationUpdatingService : Service() {
 
     companion object var serviceIntent: Intent? = null
-
 
     private val ANDROID_CHANNEL_ID = "my.kotlin.application.test200812"
     private val FOREGROUND_NOTIFICATION_ID = 1
@@ -41,19 +36,17 @@ class LocationUpdatingService : Service() {
 
     private var notificationManager: NotificationManager? = null
 
+    //Location callback by FLC(FusedLocationProviderClient)
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
+    //Location callback by LM(LocationManager)
     private lateinit var locationManager: LocationManager
     private lateinit var locationListener: android.location.LocationListener
 
-    //private var eventBuilder: NotificationCompat.Builder? = null
-
-    var receiver: MyBroadcastReceiver? = null
-
-    private val PERMISSIONS = arrayOf(
-        Manifest.permission.ACCESS_COARSE_LOCATION
-    )
+    private enum class NotificationMode {
+        normal, issue
+    }
 
     override fun onBind(p0: Intent?): IBinder? {
         TODO("Not yet implemented")
@@ -62,57 +55,47 @@ class LocationUpdatingService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this) //for FLC
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager //for LM
 
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val handlerThread = HandlerThread("ReminderThread")
+        //Run the service in a different thread
+        val handlerThread = HandlerThread("TODO Thread")
         handlerThread.start()
 
-        //핸들러는 스레드의 looper를 통해 동작.
-        //1개의 스레드에 1개의 looper가 존재.
-
-        val handlerForOtherThread = HandlerWithLooper(handlerThread.looper)
-        handlerForOtherThread.post(Runnable {
+        val handler = HandlerWithLooper(handlerThread.looper)
+        handler.post(Runnable {
             requestLocationUpdateByFLC()
-//            requestLocationUpdateByLM()
         })
 
-//        val handlerForMainThread = HandlerWithLooper(Looper.getMainLooper())
-//        handlerForMainThread.post {
-//            Thread.sleep(5000)
-//            Toast.makeText(applicationContext, "접근 알림!", Toast.LENGTH_LONG).show()
-//        }
-
-        //오레오 버전 이상은 포그라운드 서비스(+고정 알림 포함) 설정을 해주어야 함.
+        //Stick a Notification for Foreground service
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            setNotificationChannel()
-            setForegroundNotification()
+            createNotificationChannel()
+            createForegroundNotification(NotificationMode.normal)
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return START_STICKY
+        serviceIntent = intent
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
         fusedLocationClient.removeLocationUpdates(locationCallback)
-//        locationManager.removeUpdates(locationListener)
     }
 
     fun requestLocationUpdateByLM() {
-
-        val INTERVAL = 1000.toLong()
-        val DISTANCE = 1.toFloat()
+        val INTERVAL = 1000.toLong() // 1sec
+        val DISTANCE = 1.toFloat() // 1m
 
         locationListener = object : android.location.LocationListener {
             override fun onLocationChanged(location: Location) {
                 Log.e(
-                    "우진",
-                    "[업데이트된 위치 by LM] 위도: ${location.latitude} 경도: ${location.longitude}"
+                    TAG,
+                    "[location(LM)] latitude: ${location.latitude} longitude: ${location.longitude}"
                 )
             }
 
@@ -128,13 +111,10 @@ class LocationUpdatingService : Service() {
 
         if (ActivityCompat.checkSelfPermission(
                 this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("우진", "위치 권한 없음")
+            Log.e(TAG, "No location permission")
             return
         } else {
             locationManager.requestLocationUpdates(
@@ -153,42 +133,42 @@ class LocationUpdatingService : Service() {
     }
 
     fun requestLocationUpdateByFLC() {
-
         val locationRequest = LocationRequest.create()
         locationRequest.run {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 //            interval = 5 * 1000
-            fastestInterval = 1 * 1000
-            smallestDisplacement = 1.toFloat() //기본: 50미터
+            fastestInterval = 1 * 1000 // 1sec
+            smallestDisplacement = 1.toFloat() // 1m
         }
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
                 super.onLocationResult(locationResult)
-                locationResult ?: return
+                locationResult ?: createForegroundNotification(NotificationMode.issue)
 
-                for (location in locationResult.locations) {
+                for (location in locationResult!!.locations) {
 
                     Log.e(
-                        "우진",
-                        "[업데이트된 위치 by FLC] 위도: ${location.latitude} 경도: ${location.longitude}"
+                        TAG,
+                        "[location(FLC)] latitude: ${location.latitude} longitude: ${location.longitude}"
                     )
 
                     var storeList = mutableListOf<String>()
 
                     val application = application as CommonApplication
-                    val queries = application.apiContainer.storeListServiceRepository?.getPlace()
-
-                    if (queries.isNullOrEmpty()) return
+                    val queries = ArrayList<String>()
+                    queries.add("다이소")
+                    queries.add("GS25")
+                    queries.add("편의점")
                     val temp = queries.toTypedArray()
                     application.apiContainer.storeListServiceRepository
-                        ?.getToDoStoreListNearBy(
+                        .getToDoStoreListNearBy(
                             500,
                             location.longitude.toFloat(),
                             location.latitude.toFloat(),
                             100,
                             success = {
-                                Log.e("우진 다원", "Success Result $it")
+                                Log.e(TAG, "Success Result $it")
                                 val arr = JSONArray()
                                 var id = EVENT_NOTIFICATION_ID
 //                                for (item in it) {
@@ -200,16 +180,15 @@ class LocationUpdatingService : Service() {
 
                                 //TODO:점포 이름 다르게 들어오는 거 확인.
                                 for (item in it) {
-                                    Log.e("우진","${storeList.toString()}")
-                                    if(id == EVENT_NOTIFICATION_ID){
+                                    Log.e(TAG, "${storeList.toString()}")
+                                    if (id == EVENT_NOTIFICATION_ID) {
                                         storeList.add(item.bizesNm)
                                         with(NotificationManagerCompat.from(applicationContext))
                                         {
                                             notify(id, setEventNotification(item, id)!!.build())
                                         }
                                         id++
-                                    }
-                                    else{
+                                    } else {
                                         if (!storeList!!.contains(item.bizesNm)) {
                                             storeList.add(item.bizesNm)
                                             with(NotificationManagerCompat.from(applicationContext))
@@ -221,7 +200,10 @@ class LocationUpdatingService : Service() {
                                     }
                                 }
 
-                                val summaryNotification = NotificationCompat.Builder(applicationContext, ANDROID_CHANNEL_ID)
+                                val summaryNotification = NotificationCompat.Builder(
+                                    applicationContext,
+                                    ANDROID_CHANNEL_ID
+                                )
                                     .setContentTitle("근접 알림")
                                     //set content text to support devices running API level < 24
                                     .setContentText("${it.size}개의 알림이 있습니다.")
@@ -241,7 +223,7 @@ class LocationUpdatingService : Service() {
                                 //알림 표시
                             },
                             fail = {
-                                Log.e("우진 다원", "Fail Result $it")
+                                Log.e(TAG, "Fail Result $it")
                             },
                             queries = *temp
                         )
@@ -251,12 +233,13 @@ class LocationUpdatingService : Service() {
 
         if (ActivityCompat.checkSelfPermission(
                 this,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            Log.e(TAG, "No location permission")
             return
         } else {
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
@@ -265,52 +248,65 @@ class LocationUpdatingService : Service() {
 
     inner class HandlerWithLooper(looper: Looper) : Handler(looper) {
         override fun handleMessage(msg: Message) {
-            Log.e("우진", "스레드 실행 중입니다.")
-            when (msg.what) {
-                1 -> Log.e("우진", "핸들러 메시지 수신 성공")
-            }
+            Log.e(
+                TAG,
+                "Thread is running"
+            )
         }
     }
 
-    private fun setNotificationChannel() {
-        //알림 채널 생성
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                    ANDROID_CHANNEL_ID,
-                "ReminderService",
+                ANDROID_CHANNEL_ID,
+                "TODO Service",
                 NotificationManager.IMPORTANCE_NONE
             )
-
-            //Notification 객체를 가져옴
             notificationManager!!.createNotificationChannel(channel)
         }
     }
 
-    private fun setForegroundNotification() {
-        //알림 객체 생성
-        val builder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
-            .setContentTitle("여기있소")
-            .setContentText("위치 정보 사용 중입니다.")
-            .setSmallIcon(R.drawable.gps)
+    private fun createForegroundNotification(notificationMode: NotificationMode) {
 
-        val notification = builder.build()
+        //Create notification object
+        var notification: Notification? = null
+
+        when (notificationMode) {
+            NotificationMode.normal -> {
+                val builder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
+                    .setContentTitle("TO DO")
+                    .setContentText("위치 정보 사용 중입니다.")
+                    .setSmallIcon(R.drawable.location)
+                notification = builder.build()
+            }
+            NotificationMode.issue -> {
+                val builder = NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
+                    .setContentTitle("TO DO")
+                    .setContentText("위치 권한 추가 허용이 필요합니다.")
+                    .setSmallIcon(R.drawable.location)
+                notification = builder.build()
+            }
+        }
+
 
         //알림과 함께 서비스 시작
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR) {
             startForeground(FOREGROUND_NOTIFICATION_ID, notification)
         }
+
     }
 
-    private fun setEventNotification(item: Item, id: Int) : NotificationCompat.Builder{
+    private fun setEventNotification(item: Item, id: Int): NotificationCompat.Builder {
         //알림 클릭 시, 앱 진입
-        val intent = Intent(this, ListActivity::class.java).apply {
+        val intent = Intent(this, MapActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             action = FIND_ACTION
             putExtra("item", item)
         }
 
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent: PendingIntent =
+            PendingIntent.getActivity(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         //알림 콘텐츠 설정
         return NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)

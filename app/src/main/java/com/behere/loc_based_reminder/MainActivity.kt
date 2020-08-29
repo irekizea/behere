@@ -15,6 +15,7 @@ import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+
 import com.behere.loc_based_reminder.service.LocationUpdatingService
 import kotlinx.android.synthetic.main.activity_main.*
 import java.security.MessageDigest
@@ -41,9 +42,11 @@ class MainActivity : AppCompatActivity() {
             for (signature in info.signatures) {
                 val md = MessageDigest.getInstance("SHA")
                 md.update(signature.toByteArray())
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
                     Log.d("KeyHash : ", Base64.encodeToString(md.digest(), Base64.DEFAULT))
                 }
+
             }
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
@@ -108,6 +111,7 @@ class MainActivity : AppCompatActivity() {
                     stopService(intent)
                     Log.e(TAG, "Stop Service because No schedule")
                 }
+
             }
             else{
                 // At least one schedule
@@ -129,12 +133,34 @@ class MainActivity : AppCompatActivity() {
                 }
                 else{
 
+
                 }
             }
+            else{
+                // At least one schedule
+                if(todoList.size>0){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        //오레오 이상은 백그라운드로 실행하면 강제 종료 위험 있음 -> 포그라운드 실행해야
+                        startForegroundService(
+                            Intent(
+                                applicationContext,
+                                LocationUpdatingService::class.java
+                            )
+                        )
+                        Log.e(TAG, "API 레벨 26 이상")
+                    } else {
+                        //백그라운드 실행에 제약 없음
+                        startService(Intent(applicationContext, LocationUpdatingService::class.java))
+                        Log.e("우진", "API 레벨 25 이하")
+                    }
+                }
+                else{
+
 
             todoList.forEach {
                 Log.e(TAG, it.doTodo)
             }
+
         }
 
         val thread = Thread(r)

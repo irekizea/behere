@@ -258,6 +258,7 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+
             <Switch
                 android:id="@+id/alertSwitch"
                 android:layout_width="wrap_content"
@@ -265,6 +266,7 @@
                 app:layout_constraintBaseline_toBaselineOf="@+id/placeText"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/alertText" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </ScrollView>
