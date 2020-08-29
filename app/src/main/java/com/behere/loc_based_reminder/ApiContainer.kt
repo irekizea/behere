@@ -1,6 +1,5 @@
 package com.behere.loc_based_reminder
 
-import android.content.Context
 import com.behere.loc_based_reminder.data.remote.STORE_LIST_SERVICE_BASE_URL
 import com.behere.loc_based_reminder.data.remote.StoreListService
 import com.behere.loc_based_reminder.data.remote.StoreListServiceRemoteDataSource
@@ -9,9 +8,10 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 
 
-class ApiContainer(private val context: Context) {
+class ApiContainer {
     private val interceptor = HttpLoggingInterceptor().also {
         it.level = HttpLoggingInterceptor.Level.BODY
     }
@@ -27,7 +27,7 @@ class ApiContainer(private val context: Context) {
         .build()
         .create(StoreListService::class.java)
 
-    val todoDao =  TodoDB.getInstance(context)?.todoDao()!!
     private val storeListServiceRemoteDataSource = StoreListServiceRemoteDataSource(storeListService)
-    val storeListServiceRepository = StoreListServiceRepository(storeListServiceRemoteDataSource, todoDao)
+    val storeListServiceRepository = StoreListServiceRepository(storeListServiceRemoteDataSource)
+
 }
