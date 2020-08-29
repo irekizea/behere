@@ -31,7 +31,7 @@ class LocationUpdatingService : Service() {
     var serviceIntent: Intent? = null
 
     private val ANDROID_CHANNEL_ID = "my.kotlin.application.test200812"
-    private val FOREGROUND_NOTIFICATION_ID = 1
+    private val STICK_NOTIFICATION_ID = 1
     private val EVENT_SUMMARY_ID = 0
     private val EVENT_NOTIFICATION_ID = 9
 
@@ -80,9 +80,6 @@ class LocationUpdatingService : Service() {
             createNotificationChannel()
             createStickNotification(NotificationMode.normal)
         }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        serviceIntent = intent
         return START_STICKY
     }
 
@@ -341,7 +338,6 @@ class LocationUpdatingService : Service() {
     }
 
     private fun createStickNotification(notificationMode: NotificationMode) {
-
         //Create notification object
         var notification: Notification? = null
 
@@ -361,38 +357,8 @@ class LocationUpdatingService : Service() {
                 notification = builder.build()
             }
         }
-
         //Service starts with notification pinning
         startForeground(STICK_NOTIFICATION_ID, notification)
-    }
-
-    private fun setEventNotification(
-        location: Location,
-        q: String,
-        items: ArrayList<Item>,
-        id: Int
-    ): NotificationCompat.Builder {
-        //When clicking on the notification, enter the app
-        val intent = Intent(this, MapActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            action = FIND_ACTION
-            putExtra("item", item)
-        }
-
-        val pendingIntent: PendingIntent =
-            PendingIntent.getActivity(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-
-        //알림 콘텐츠 설정
-        return NotificationCompat.Builder(this, ANDROID_CHANNEL_ID)
-            .setSmallIcon(R.drawable.bell)
-            .setContentTitle("${item.bizesNm}")
-            .setContentText("할 일 설정 장소 ${item.bizesNm} 인접한 곳에 있습니다.")
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .setGroup(NOTI_GROUP)
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
     }
 
     private fun setEventNotification(
