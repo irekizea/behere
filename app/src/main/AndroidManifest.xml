@@ -31,7 +31,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity"></activity>
-        <activity android:name=".AddActivity" android:windowSoftInputMode="adjustResize"/>
+        <activity
+            android:name=".AddActivity"
+            android:windowSoftInputMode="adjustNothing" />
 
         <service
             android:name=".service.LocationUpdatingService"
@@ -44,7 +46,9 @@
             </intent-filter>
         </receiver>
 
-        <meta-data android:name="com.kakao.sdk.AppKey" android:value="91b39e9915563e0c71ac6643bb39b5c8"/>
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="91b39e9915563e0c71ac6643bb39b5c8" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBnGpvpTRAHN4WVFK1WwSvoBFRzMsJtu4s" />
