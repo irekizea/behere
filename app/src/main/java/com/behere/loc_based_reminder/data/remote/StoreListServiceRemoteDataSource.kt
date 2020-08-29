@@ -40,6 +40,7 @@ class StoreListServiceRemoteDataSource(private val storeListService: StoreListSe
                     if (response.header.resultCode == "03") {
                         // 데이터가 없음
                         success(totalList)
+                        page = 1
                         return
                     }
                     totalList.addAll(response.body.items)
@@ -52,6 +53,7 @@ class StoreListServiceRemoteDataSource(private val storeListService: StoreListSe
                 t.message?.let {
                     fail(it)
                 }
+                page = 1
 
             }
         })
