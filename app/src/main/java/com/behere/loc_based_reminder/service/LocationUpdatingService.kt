@@ -33,6 +33,7 @@ class LocationUpdatingService : Service() {
     private val ANDROID_CHANNEL_ID = "my.kotlin.application.test200812"
     private val STICK_NOTIFICATION_ID = 1
     private val EVENT_SUMMARY_ID = 9
+    private val EVENT_SUMMARY_ID = 0
     private val EVENT_NOTIFICATION_ID = 9
 
     private var notificationManager: NotificationManager? = null
@@ -72,6 +73,7 @@ class LocationUpdatingService : Service() {
         val handler = HandlerWithLooper(handlerThread.looper)
         handler.post(Runnable {
             requestLocationUpdateByFLC()
+            requestLocationUpdateByLM()
         })
 
         //Stick a Notification for Foreground service
@@ -90,7 +92,7 @@ class LocationUpdatingService : Service() {
     }
 
     fun requestLocationUpdateByLM() {
-        val INTERVAL = 1000.toLong() // 1sec
+        val INTERVAL = (1000 * 30).toLong() // 1sec
         val DISTANCE = 1.toFloat() // 1m
 
         locationListener = object : android.location.LocationListener {
@@ -99,7 +101,80 @@ class LocationUpdatingService : Service() {
                     TAG,
                     "[location(LM)] latitude: ${location.latitude} longitude: ${location.longitude}"
                 )
+
+                val application = application as CommonApplication
+                val queries = application.apiContainer.storeListServiceRepository?.getPlace()
+                if (queries.isNullOrEmpty()) return
+                val temp = queries.toTypedArray()
+                application.apiContainer.storeListServiceRepository
+                    .getToDoStoreListNearBy(
+                        100,
+                        location.longitude.toFloat(),
+                        location.latitude.toFloat(),
+                        1000,
+                        success = {
+                            Log.e(TAG, "Success Result $it")
+                            val arr = JSONArray()
+                            val map = HashMap<String, ArrayList<Item>>()
+                            var id = EVENT_NOTIFICATION_ID
+                            //TODO:점포 이름 다르게 들어오는 거 확인.
+                            for (item in it) {
+                                for (q in queries) {
+                                    Log.e("다원", "query : $q")
+                                    if (item.bizesNm.contains(q)) {
+                                        if (!map.containsKey(q)) {
+                                            Log.e("다원", "query not contains : $q")
+                                            map[q] = ArrayList<Item>()
+                                        }
+                                        map[q]?.add(item)
+                                    }
+                                }
+                            }
+                            for (value in map) {
+                                Log.e("다원", "noti : ${value.key}")
+                                with(NotificationManagerCompat.from(applicationContext))
+                                {
+                                    notify(
+                                        id,
+                                        setEventNotification(
+                                            location,
+                                            value.key,
+                                            value.value,
+                                            id
+                                        )!!.build()
+                                    )
+                                }
+                                id += 1
+                            }
+
+                            if (map.size > 1) {
+                                Log.e("다원", "noti summary")
+                                val summaryNotification = NotificationCompat.Builder(
+                                    applicationContext,
+                                    ANDROID_CHANNEL_ID
+                                )
+                                    .setContentTitle("근접 알림")
+                                    .setContentText("${map.size}개의 알림이 있습니다.")
+                                    .setSmallIcon(R.drawable.bell)
+                                    .setGroup(NOTI_GROUP)
+                                    .setGroupSummary(true)
+                                    .build()
+
+                                with(NotificationManagerCompat.from(applicationContext)) {
+                                    notify(EVENT_SUMMARY_ID, summaryNotification)
+                                }
+                            }
+
+                            //writeFile(FILE_NAME, applicationContext, arr.toString())
+                            //알림 표시
+                        },
+                        fail = {
+                            Log.e(TAG, "Fail Result $it")
+                        },
+                        queries = *temp
+                    )
             }
+
 
             override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
             }
@@ -134,13 +209,11 @@ class LocationUpdatingService : Service() {
         }
     }
 
-    fun requestLocationUpdateByFLC() {
+    private fun requestLocationUpdateByFLC() {
         val locationRequest = LocationRequest.create()
         locationRequest.run {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-//            interval = 5 * 1000
-            fastestInterval = 1 * 1000 // 1sec
-            smallestDisplacement = 1.toFloat() // 1m
+            fastestInterval = 60 * 1000
         }
 
         locationCallback = object : LocationCallback() {
@@ -161,10 +234,10 @@ class LocationUpdatingService : Service() {
                     val temp = queries.toTypedArray()
                     application.apiContainer.storeListServiceRepository
                         .getToDoStoreListNearBy(
-                            1000,
+                            100,
                             location.longitude.toFloat(),
                             location.latitude.toFloat(),
-                            100,
+                            1000,
                             success = {
                                 Log.e(TAG, "Success Result $it")
                                 val arr = JSONArray()
@@ -183,7 +256,6 @@ class LocationUpdatingService : Service() {
                                         }
                                     }
                                 }
-
                                 for (value in map) {
                                     Log.e(TAG, "noti : ${value.key}")
                                     with(NotificationManagerCompat.from(applicationContext))
@@ -198,22 +270,19 @@ class LocationUpdatingService : Service() {
                                             )!!.build()
                                         )
                                     }
-                                    id++
+                                    id += 1
                                 }
 
                                 if (map.size > 1) {
+                                    Log.e("다원", "noti summary")
                                     val summaryNotification = NotificationCompat.Builder(
                                         applicationContext,
                                         ANDROID_CHANNEL_ID
                                     )
                                         .setContentTitle("근접 알림")
-                                        //set content text to support devices running API level < 24
                                         .setContentText("${map.size}개의 알림이 있습니다.")
                                         .setSmallIcon(R.drawable.bell)
-                                        //build summary info into InboxStyle template
-                                        //specify which group this notification belongs to
                                         .setGroup(NOTI_GROUP)
-                                        //set this notification as the summary for the group
                                         .setGroupSummary(true)
                                         .build()
 
@@ -221,6 +290,7 @@ class LocationUpdatingService : Service() {
                                         notify(EVENT_SUMMARY_ID, summaryNotification)
                                     }
                                 }
+
                                 //writeFile(FILE_NAME, applicationContext, arr.toString())
                                 //알림 표시
                             },
