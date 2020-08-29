@@ -107,15 +107,14 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "Error - $e")
             }
 
-            if(LocationUpdatingService().serviceIntent != null){
-                if(todoList.size == 0){
+            if (LocationUpdatingService().serviceIntent != null) {
+                if (todoList.size == 0) {
                     stopService(intent)
                     Log.e(TAG, "Stop Service because No schedule")
                 }
-            }
-            else{
+            } else {
                 // At least one schedule
-                if(todoList.size>0){
+                if (todoList.size > 0) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         //오레오 이상은 백그라운드로 실행하면 강제 종료 위험 있음 -> 포그라운드 실행해야
                         startForegroundService(
@@ -127,22 +126,27 @@ class MainActivity : AppCompatActivity() {
                         Log.e(TAG, "API 레벨 26 이상")
                     } else {
                         //백그라운드 실행에 제약 없음
-                        startService(Intent(applicationContext, LocationUpdatingService::class.java))
+                        startService(
+                            Intent(
+                                applicationContext,
+                                LocationUpdatingService::class.java
+                            )
+                        )
                         Log.e("우진", "API 레벨 25 이하")
                     }
+                } else {
                 }
-                else{
+                todoList.forEach {
+                    Log.e(TAG, it.doTodo)
                 }
-            todoList.forEach {
-                Log.e(TAG, it.doTodo)
             }
         }
 
         val thread = Thread(r)
         thread.start()
-
         setViews()
     }
+
 
     override fun onDestroy() {
         TodoDB.destroyInstance()
@@ -150,7 +154,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    fun setViews() {
+    private fun setViews() {
         add_btn.setOnClickListener {
             val intent = Intent(applicationContext, AddActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -158,8 +162,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    var simpleItemTouchCallback: ItemTouchHelper.SimpleCallback =
-        object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+    private var simpleItemTouchCallback: ItemTouchHelper.SimpleCallback =
+        object :
+            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(
                 @NonNull recyclerView: RecyclerView,
                 @NonNull viewHolder: RecyclerView.ViewHolder,
@@ -178,6 +183,7 @@ class MainActivity : AppCompatActivity() {
                 todoDb?.todoDao()?.delete(todo)
             }
         }
+
 }
 
 

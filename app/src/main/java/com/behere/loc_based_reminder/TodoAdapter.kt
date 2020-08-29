@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.behere.loc_based_reminder.data.todo.Todo
 import kotlinx.android.synthetic.main.item_todo_woojin.view.*
 
 class TodoAdapter(val context: Context, val todos: List<Todo>) :

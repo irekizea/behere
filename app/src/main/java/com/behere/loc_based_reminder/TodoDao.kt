@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
 import androidx.room.Delete
-import com.behere.loc_based_reminder.data.todo.Todo
 
 @Dao
 interface TodoDao {

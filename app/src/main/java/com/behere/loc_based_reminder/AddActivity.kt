@@ -2,8 +2,8 @@ package com.behere.loc_based_reminder
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.behere.loc_based_reminder.data.todo.Todo
 import kotlinx.android.synthetic.main.activity_add.*
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -18,7 +18,7 @@ class AddActivity : AppCompatActivity() {
         todoDb = TodoDB.getInstance(this)
 
         // 새로운 todo 객체를 생성, id 이외의 값을 지정 후 DB에 추가
-
+        val application = application as CommonApplication
         save_btn.setOnClickListener {
             val newTodo = Todo()
             newTodo.doPlace = location_edit.text.toString()
