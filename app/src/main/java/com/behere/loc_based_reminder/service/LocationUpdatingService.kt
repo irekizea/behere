@@ -26,10 +26,9 @@ const val NOTI_GROUP = "com.behere.loc_based_reminder.NOTI_GROUP"
 
 class LocationUpdatingService : Service() {
 
-    companion object
-
-    var serviceIntent: Intent? = null
-
+    companion object {
+        var serviceIntent: Intent? = null
+    }
     private val ANDROID_CHANNEL_ID = "my.kotlin.application.test200812"
     private val STICK_NOTIFICATION_ID = 1
     private val EVENT_SUMMARY_ID = 0
@@ -72,7 +71,7 @@ class LocationUpdatingService : Service() {
         val handler = HandlerWithLooper(handlerThread.looper)
         handler.post(Runnable {
             requestLocationUpdateByFLC()
-            requestLocationUpdateByLM()
+            //requestLocationUpdateByLM()
         })
 
         //Stick a Notification for Foreground service
@@ -89,7 +88,7 @@ class LocationUpdatingService : Service() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
-    fun requestLocationUpdateByLM() {
+    private fun requestLocationUpdateByLM() {
         val INTERVAL = (1000 * 10).toLong() // 10sec
         val DISTANCE = 1.toFloat() // 1m
 
@@ -208,11 +207,11 @@ class LocationUpdatingService : Service() {
     }
 
     private fun requestLocationUpdateByFLC() {
-        val locationRequest = LocationRequest.create()
-        locationRequest.run {
+        val locationRequest = LocationRequest.create()?.apply {
+            interval = 10000
+            fastestInterval = 5000
+            smallestDisplacement = 1f
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-            smallestDisplacement = 1f //lm
-            fastestInterval = 10 * 1000 //10sec
         }
 
         locationCallback = object : LocationCallback() {

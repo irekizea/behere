@@ -1,9 +1,11 @@
 package com.behere.loc_based_reminder
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.behere.loc_based_reminder.service.LocationUpdatingService
 import kotlinx.android.synthetic.main.activity_add.*
 
 const val tag = "TODO"
@@ -27,6 +29,18 @@ class AddActivity : AppCompatActivity() {
             newTodo.doAlert = alarm_switch.isChecked
             application.apiContainer.todoDao.insert(newTodo)
             Log.e(tag, newTodo.doAlert.toString())
+
+            if (LocationUpdatingService.serviceIntent == null) {
+                val startServiceIntent = Intent(this, LocationUpdatingService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(startServiceIntent)
+                } else {
+                    startService(startServiceIntent)
+                }
+                Log.e(TAG, "Start service")
+            } else {
+                //No service, No schedule
+            }
 
             val i = Intent(this, MainActivity::class.java)
             i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

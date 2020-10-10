@@ -109,7 +109,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "Error - $e")
             }
 
-            if (LocationUpdatingService().serviceIntent == null) {
+            if (LocationUpdatingService.serviceIntent == null) {
                 // At least one schedule
                 if (todoList.size > 0) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -119,12 +119,8 @@ class MainActivity : AppCompatActivity() {
                     }
                     Log.e(TAG, "Start service")
                 } else {
-
                     //No service, No schedule
-
                 }
-            } else {
-
             }
         }
 
@@ -169,6 +165,7 @@ class MainActivity : AppCompatActivity() {
                 todoDb?.todoDao()?.delete(todo)
                 if (todoList.size == 0) {
                     stopService(startServiceIntent)
+                    LocationUpdatingService.serviceIntent = null
                     Log.e(TAG, "Stop service")
                 }
             }
